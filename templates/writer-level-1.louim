@@ -2,27 +2,21 @@
   "version": 1,
   "application": "writer",
   "profile": {
-    "name": "Writer Level 1",
+    "name": "Getting Started",
     "description": "Very simple Writer interface for beginners."
   },
   "menus": {
-    "file": true,
-    "edit": true,
-    "view": false,
-    "insert": false,
-    "format": true,
-    "styles": false,
-    "table": false,
-    "form": false,
-    "tools": false,
-    "window": false,
-    "help": true
+    ".uno:FileMenu": true,
+    ".uno:EditMenu": true,
+    ".uno:ViewMenu": false,
+    ".uno:InsertMenu": false,
+    ".uno:FormatMenu": true,
+    ".uno:StylesMenu": false,
+    ".uno:TableMenu": false,
+    ".uno:FormMenu": false,
+    ".uno:ToolsMenu": false,
+    ".uno:WindowList": false,
+    ".uno:HelpMenu": true
   },
-  "toolbars": {
-    "standard": true,
-    "formatting": true,
-    "drawing": false,
-    "table": false,
-    "image": false
-  }
+  "toolbars": {}
 }
