@@ -109,7 +109,7 @@ The core of LOUIM should not contain application-specific code.
 +-------------+-------------+
               |
 +-------------v-------------+
-|    Interface Scanner      |
+|    Discovery Engine      |
 +-------------+-------------+
               |
       Writer Provider
@@ -132,7 +132,7 @@ Responsible for:
 
 ---
 
-## Interface Scanner
+## Discovery Engine
 
 Discovers the current Writer interface.
 
@@ -283,3 +283,13 @@ For every new feature:
 7. Create a tagged milestone when appropriate.
 
 Documentation is considered part of the source code and should remain synchronized with the implementation.
+
+## Workspace
+
+A Workspace represents the currently active LibreOffice application together with its interface and active profile.
+
+A Workspace contains:
+
+- Application
+- UI Elements
+- Active Profile

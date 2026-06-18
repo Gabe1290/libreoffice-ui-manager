@@ -35,3 +35,11 @@ This makes templates independent of the LibreOffice language.
   },
   "toolbars": {}
 }
+
+## Canonical Identifiers
+
+All templates must use LibreOffice UNO command IDs.
+
+Localized names must never be stored.
+
+The user interface will display localized names, but the template file always stores UNO IDs.

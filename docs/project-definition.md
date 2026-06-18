@@ -93,3 +93,12 @@ This allows a teacher to manually customize LibreOffice Writer first, then expor
 This is important because teachers may prefer to prepare the interface visually instead of writing JSON by hand.
 
 The exported template must still store menu and command information using LibreOffice UNO command IDs, not localized menu names.
+
+## Core Design Principles
+
+1. Educational-first design
+2. Language-independent profiles using UNO command IDs
+3. Dynamic interface discovery
+4. Cross-platform support (Linux, Windows, macOS)
+5. Modular architecture using application providers
+6. User-customizable profiles and templates
