@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "application": "writer",
+  "profile": {
+    "name": "Basic Editing",
+    "description": "Writer interface for learners who are ready to use insert, view, and table features."
+  },
+  "menus": {
+    ".uno:FileMenu": true,
+    ".uno:EditMenu": true,
+    ".uno:ViewMenu": true,
+    ".uno:InsertMenu": true,
+    ".uno:FormatMenu": true,
+    ".uno:StylesMenu": false,
+    ".uno:TableMenu": true,
+    ".uno:FormMenu": false,
+    ".uno:ToolsMenu": false,
+    ".uno:WindowList": false,
+    ".uno:HelpMenu": true
+  },
+  "toolbars": {}
+}

@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "application": "writer",
+  "profile": {
+    "name": "Complete Writer",
+    "description": "Restores the full LibreOffice Writer interface."
+  },
+  "menus": {
+    ".uno:FileMenu": true,
+    ".uno:EditMenu": true,
+    ".uno:ViewMenu": true,
+    ".uno:InsertMenu": true,
+    ".uno:FormatMenu": true,
+    ".uno:StylesMenu": true,
+    ".uno:TableMenu": true,
+    ".uno:FormMenu": true,
+    ".uno:ToolsMenu": true,
+    ".uno:WindowList": true,
+    ".uno:HelpMenu": true
+  },
+  "toolbars": {}
+}
