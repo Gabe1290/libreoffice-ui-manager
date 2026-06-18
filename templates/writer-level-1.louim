@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "application": "writer",
+  "profile": {
+    "name": "Writer Level 1",
+    "description": "Very simple Writer interface for beginners."
+  },
+  "menus": {
+    "file": true,
+    "edit": true,
+    "view": false,
+    "insert": false,
+    "format": true,
+    "styles": false,
+    "table": false,
+    "form": false,
+    "tools": false,
+    "window": false,
+    "help": true
+  },
+  "toolbars": {
+    "standard": true,
+    "formatting": true,
+    "drawing": false,
+    "table": false,
+    "image": false
+  }
+}
