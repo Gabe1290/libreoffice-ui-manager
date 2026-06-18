@@ -5,6 +5,7 @@ This folder contains the documentation for LibreOffice UI Manager.
 ## Vision and Strategy
 
 - `../VISION.md`
+- `project-constitution.md`
 - `project-definition.md`
 - `design-principles.md`
 - `roadmap.md`
