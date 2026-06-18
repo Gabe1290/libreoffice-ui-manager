@@ -81,3 +81,15 @@ Version 1 should provide:
 - restore full Writer interface
 - use UNO command IDs internally
 - work on Windows, Linux, and macOS
+
+## Important planned feature: Export current interface
+
+LibreOffice UI Manager should include an option:
+
+**Export current Writer interface as template**
+
+This allows a teacher to manually customize LibreOffice Writer first, then export the visible/hidden interface state as a reusable `.louim` template.
+
+This is important because teachers may prefer to prepare the interface visually instead of writing JSON by hand.
+
+The exported template must still store menu and command information using LibreOffice UNO command IDs, not localized menu names.
