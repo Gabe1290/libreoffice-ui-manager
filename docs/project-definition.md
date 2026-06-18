@@ -1,104 +1,75 @@
-# LibreOffice UI Manager — Project Definition
+# Project Definition
 
-## Purpose
+# LibreOffice UI Manager (LOUIM)
 
-LibreOffice UI Manager is an educational LibreOffice extension that allows teachers to progressively simplify the LibreOffice Writer interface for students and adult beginners.
+## Mission
 
-The goal is not to lock users down, but to reduce cognitive overload while learners are introduced step by step to word processing.
+LibreOffice UI Manager (LOUIM) is an educational LibreOffice extension designed to progressively simplify the LibreOffice user interface.
 
-## First target
+Its objective is to allow teachers to reveal only the functionality required for the current lesson, reducing cognitive overload while students learn.
 
-The first working version focuses on LibreOffice Writer only.
+LOUIM is intended for:
 
-Later versions may add Calc, Impress, and Draw.
+- Schools
+- Adult education
+- Digital literacy programmes
+- Public libraries
+- Self-learning
 
-## Educational goal
+---
 
-Teachers should be able to create, save, share, and import interface templates.
+# Objectives
 
-A template may show only the menus and tools needed for a specific lesson or learning stage.
+LOUIM allows users to:
 
-Examples:
+- discover the current LibreOffice interface
+- create interface profiles
+- import profiles
+- export profiles
+- export the current interface as a template
+- progressively reveal new functionality
 
-- Getting Started
-- Basic Editing
-- Document Layout
-- Working with Images
-- Tables
-- Complete Writer
+---
 
-## Template files
+# First Supported Application
+
+Version 1 supports only:
+
+- LibreOffice Writer
+
+Future versions will support:
+
+- Calc
+- Impress
+- Draw
+
+without changing the architecture.
+
+---
+
+# Templates
 
 Templates use the `.louim` extension.
 
-A `.louim` file is a JSON file that describes which parts of the Writer interface should be visible or hidden.
+Templates are JSON documents.
 
-Teachers can share these templates with students through Moodle, email, USB stick, or a shared school folder.
+Templates are language-independent.
 
-## Internationalization requirement
+Templates store UNO command identifiers.
 
-Templates must use LibreOffice UNO command IDs, not English menu names.
+---
 
-This is essential because Swiss schools may use LibreOffice in French, German, Italian, English, and other languages used by the international community.
+# Educational Philosophy
 
-For example, profiles should use identifiers such as:
+LOUIM is not intended to hide functionality permanently.
 
-- `.uno:FileMenu`
-- `.uno:EditMenu`
-- `.uno:ViewMenu`
-- `.uno:InsertMenu`
-- `.uno:FormatMenu`
-- `.uno:StylesMenu`
-- `.uno:TableMenu`
-- `.uno:FormMenu`
-- `.uno:ToolsMenu`
-- `.uno:HelpMenu`
+Its purpose is to simplify learning.
 
-The visible labels shown to users can be localized, but the stored configuration must remain language-independent.
+Teachers remain in complete control of the learning progression.
 
-## Future enhancement
+---
 
-Later, LibreOffice UI Manager may become more than an interface manager.
+# Long-Term Vision
 
-A future `.louim` template could also include:
+Eventually LOUIM should become the reference educational interface manager for LibreOffice.
 
-- a welcome message for learners,
-- lesson objectives,
-- teacher notes,
-- links to exercises,
-- hints for students.
-
-This enhancement should be kept in mind during development, but it is not part of the first working version.
-
-## Version 1 goal
-
-Version 1 should provide:
-
-- Writer support only
-- import `.louim` template
-- export `.louim` template
-- hide/show top-level Writer menus
-- restore full Writer interface
-- use UNO command IDs internally
-- work on Windows, Linux, and macOS
-
-## Important planned feature: Export current interface
-
-LibreOffice UI Manager should include an option:
-
-**Export current Writer interface as template**
-
-This allows a teacher to manually customize LibreOffice Writer first, then export the visible/hidden interface state as a reusable `.louim` template.
-
-This is important because teachers may prefer to prepare the interface visually instead of writing JSON by hand.
-
-The exported template must still store menu and command information using LibreOffice UNO command IDs, not localized menu names.
-
-## Core Design Principles
-
-1. Educational-first design
-2. Language-independent profiles using UNO command IDs
-3. Dynamic interface discovery
-4. Cross-platform support (Linux, Windows, macOS)
-5. Modular architecture using application providers
-6. User-customizable profiles and templates

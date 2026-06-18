@@ -1,175 +1,74 @@
-# LibreOffice UI Manager (LOUIM)
-
 # Architecture
 
-Version 1.0 (Draft)
+## Overview
+
+LOUIM consists of independent modules that communicate through a common internal model.
+
+LibreOffice-specific code is isolated inside application providers.
+
+The rest of the software remains application-independent.
 
 ---
 
-# 1. Purpose
-
-LibreOffice UI Manager (LOUIM) is an educational LibreOffice extension whose purpose is to progressively simplify the LibreOffice user interface for teaching and learning.
-
-LOUIM is **not** intended to lock down LibreOffice. Instead, it allows teachers to reveal functionality gradually as learners become more comfortable with the application.
-
-The first supported application is **LibreOffice Writer**.
-
-Support for Calc, Impress and Draw will be added later without changing the overall architecture.
-
----
-
-# 2. Design Principles
-
-## Educational First
-
-Every design decision should support teaching and learning.
-
-The objective is to reduce cognitive load while allowing teachers complete flexibility.
-
----
-
-## Language Independence
-
-LOUIM must never rely on localized menu names.
-
-All internal data must use LibreOffice UNO command identifiers.
-
-Example:
-
-```
-.uno:FileMenu
-```
-
-instead of
-
-```
-File
-Fichier
-Datei
-File
-```
-
-This guarantees that templates work on every LibreOffice language.
-
----
-
-## Dynamic Discovery
-
-LOUIM should discover the current LibreOffice interface whenever possible.
-
-The extension should not rely on hardcoded menu definitions except as a compatibility fallback.
-
----
-
-## Cross Platform
-
-LOUIM must work on
-
-* Linux
-* Windows
-* macOS
-
-using the same source code.
-
----
-
-## Modular Design
-
-Each LibreOffice application is implemented as an independent provider.
-
-The core of LOUIM should not contain application-specific code.
-
----
-
-# 3. High-Level Architecture
-
-```
-+---------------------------+
-|      LibreOffice UI       |
-+-------------+-------------+
-              |
-              |
-+-------------v-------------+
-|     LOUIM User Interface  |
-+-------------+-------------+
-              |
-              |
-+-------------v-------------+
-|        Core Engine        |
-+-------------+-------------+
-              |
-    +---------+---------+
-    |                   |
-+---v---+           +---v---+
-|Import |           |Export |
-+-------+           +-------+
-    |                   |
-+---v-------------------v---+
-|      Profile Manager      |
-+-------------+-------------+
-              |
-+-------------v-------------+
-|    Discovery Engine      |
-+-------------+-------------+
-              |
-      Writer Provider
-```
-
----
-
-# 4. Main Components
+# Main Components
 
 ## User Interface
 
-Responsible for:
+Displays dialogs.
 
-* loading templates
-* saving templates
-* importing templates
-* exporting templates
-* applying templates
-* restoring defaults
+Allows users to:
+
+- load templates
+- save templates
+- export templates
+- export current interface
+- restore defaults
+
+---
+
+## Core Engine
+
+Coordinates every operation.
+
+The Core Engine never communicates directly with LibreOffice.
 
 ---
 
 ## Discovery Engine
 
-Discovers the current Writer interface.
+Discovers the current application interface.
 
-Responsible for identifying:
+Responsibilities:
 
-* menus
-* toolbars
-* sidebar decks
-* notebook bar tabs
-* commands
+- discover menus
+- discover toolbars
+- discover sidebar panels
+- discover NotebookBar tabs
+- discover commands
 
-All discovered items are identified using UNO command IDs.
+The Discovery Engine always identifies objects using UNO command IDs.
 
 ---
 
 ## Profile Manager
 
-Maintains the internal representation of a Writer profile.
+Maintains the current profile.
 
-Responsible for:
-
-* loading
-* saving
-* validation
-* compatibility checking
+Responsible for validation, compatibility and serialization.
 
 ---
 
-## Import / Export
+## Template Manager
 
-Imports and exports `.louim` template files.
+Imports and exports `.louim` files.
 
-The export module should also support:
+---
 
-**Export Current Writer Interface**
+## Apply Engine
 
-This allows a teacher to visually configure Writer and immediately create a reusable template.
+Applies profiles to LibreOffice.
+
+Shows or hides UI elements.
 
 ---
 
@@ -177,119 +76,37 @@ This allows a teacher to visually configure Writer and immediately create a reus
 
 Every LibreOffice application has its own provider.
 
-Version 1 contains only:
+Version 1:
 
-```
-Writer Provider
-```
+- Writer Provider
 
-Future versions will add:
+Future:
 
-```
-Calc Provider
-
-Impress Provider
-
-Draw Provider
-```
-
-without requiring changes to the core engine.
+- Calc Provider
+- Impress Provider
+- Draw Provider
 
 ---
 
-# 5. Internal Data Model
+# Internal Model
 
-The core engine works with an internal interface model.
+Every component works on a common internal representation.
 
-```
+Workspace
+
+↓
+
 Application
 
-Menus
+↓
 
-Toolbars
+UI Elements
 
-Sidebar
+↓
 
-NotebookBar
+Profile
 
-Commands
-```
+The user interface never manipulates LibreOffice directly.
 
-Every operation works on this model.
+Only the Discovery Engine and the Apply Engine communicate with LibreOffice.
 
-Templates are only a serialized representation of this structure.
-
----
-
-# 6. Template Philosophy
-
-Templates represent an educational state of the user interface.
-
-Examples include:
-
-* Getting Started
-* Basic Editing
-* Document Layout
-* Working with Images
-* Complete Writer
-
-Templates should never depend on the language of LibreOffice.
-
----
-
-# 7. Future Expansion
-
-Possible future features include:
-
-* lesson objectives
-* welcome messages
-* teacher notes
-* student hints
-* links to learning material
-
-These features are intentionally outside Version 1.
-
-The architecture should allow them to be added without redesigning the core.
-
----
-
-# 8. Version 1 Scope
-
-Version 1 should implement only:
-
-* Writer support
-* dynamic interface discovery
-* profile manager
-* template import
-* template export
-* export current interface
-* apply profile
-* restore default interface
-
-Everything else belongs to future milestones.
-
----
-
-# 9. Development Workflow
-
-For every new feature:
-
-1. Update the documentation.
-2. Implement the feature.
-3. Test on Linux.
-4. Test on Windows.
-5. Test on macOS.
-6. Commit to Git.
-7. Create a tagged milestone when appropriate.
-
-Documentation is considered part of the source code and should remain synchronized with the implementation.
-
-## Workspace
-
-A Workspace represents the currently active LibreOffice application together with its interface and active profile.
-
-A Workspace contains:
-
-- Application
-- UI Elements
-- Active Profile
