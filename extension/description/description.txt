@@ -1,0 +1,1 @@
+LibreOffice UI Manager helps teachers progressively simplify the LibreOffice interface for learners.
