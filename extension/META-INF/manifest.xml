@@ -6,4 +6,11 @@
         manifest:media-type="application/vnd.sun.star.configuration-data"
         manifest:full-path="Addons.xcu"/>
 
+    <!-- Register the bundled Python scripts as a script provider so the
+         menu's vnd.sun.star.script URL can resolve. Without this entry the
+         menu item exists but the entry point never executes. -->
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.framework-script"
+        manifest:full-path="python/"/>
+
 </manifest:manifest>

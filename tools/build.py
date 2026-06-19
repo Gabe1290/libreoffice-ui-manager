@@ -32,7 +32,11 @@ def copy_files():
 
 
 def make_oxt():
-    oxt_path = DIST / f"louim-{VERSION}.oxt"
+    # Stable filename (no version): LibreOffice deploys the .oxt into a folder
+    # named after the file, and the menu's vnd.sun.star.script URL references
+    # that folder name. Keeping it constant means the URL survives version bumps.
+    # The real version lives in extension/description.xml.
+    oxt_path = DIST / "louim.oxt"
 
     if oxt_path.exists():
         oxt_path.unlink()

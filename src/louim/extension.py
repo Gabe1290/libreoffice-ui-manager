@@ -26,3 +26,7 @@ def hello(*args):
         box.execute()
     except Exception as exc:
         print("LOUIM error:", exc)
+
+
+# Expose the entry point to the LibreOffice script provider.
+g_exportedScripts = (hello,)
