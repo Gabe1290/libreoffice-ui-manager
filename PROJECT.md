@@ -58,8 +58,26 @@ outside the package.
 
 1. Confirm the Tools-menu "Hello LOUIM" entry works in the GUI (install
    `dist/louim.oxt` via Extension Manager, restart, click the menu item).
-2. Begin the Discovery Engine: enumerate available Writer `.uno:` commands.
-3. Wire a first `.louim` template to actually show/hide a menu.
+2. Wire the Apply Engine into the extension UI (a menu entry that loads a
+   `.louim` file and applies it, plus a "Restore full menus" entry).
+3. Extend discovery/apply beyond the top-level menu bar (submenu items,
+   toolbars, sidebar) per the architecture.
+
+## Engine Status (verified headlessly)
+
+- **Discovery Engine v0** — `src/louim/adapters/writer/menubar.py`
+  `discover_top_level_menus(ctx)` reads Writer's live top-level menus as UNO
+  command IDs. Dev tool: `tools/discover-menus.py`.
+- **Template Manager (load)** — `src/louim/template/loader.py`
+  `load_template(path)` parses and validates `.louim` files. Unit-tested in CI.
+- **Apply Engine v0** — same adapter: `apply_menu_profile(ctx, menus)` hides the
+  top-level menus a template marks `false` (always derived from the factory
+  default, so it is idempotent), and `restore_default_menus(ctx)` reverts to the
+  built-in full menu bar. Dev tool: `tools/apply-template.py`.
+
+  Verified: applying `writer-level-1.louim` reduces the Writer menu bar to
+  exactly File/Edit/Format/Help, and restore returns all 11 menus, leaving the
+  profile clean.
 
 ## Resume Prompt
 

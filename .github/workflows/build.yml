@@ -22,6 +22,9 @@ jobs:
       - name: Byte-compile Python sources
         run: python -m compileall -q src tools
 
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+
       - name: Build .oxt package
         run: python tools/build.py
 
