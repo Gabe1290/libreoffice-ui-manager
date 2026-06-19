@@ -1,0 +1,33 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Byte-compile Python sources
+        run: python -m compileall -q src tools
+
+      - name: Build .oxt package
+        run: python tools/build.py
+
+      - name: Upload .oxt artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: louim-oxt
+          path: dist/louim.oxt
+          if-no-files-found: error
