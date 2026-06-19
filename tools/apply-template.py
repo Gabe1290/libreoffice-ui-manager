@@ -29,6 +29,10 @@ from louim.adapters.writer.menubar import (  # noqa: E402
     apply_menu_profile,
     restore_default_menus,
 )
+from louim.adapters.writer.addons import (  # noqa: E402
+    apply_addon_profile,
+    restore_addon_menus,
+)
 from louim.template.loader import load_template  # noqa: E402
 
 
@@ -62,16 +66,22 @@ def main():
         return 1
 
     if args.restore:
-        restored = restore_default_menus(ctx)
-        print("Restored default menu bar." if restored
-              else "No customization to restore (already default).")
+        restored_menus = restore_default_menus(ctx)
+        restored_addons = restore_addon_menus(ctx)
+        print("Restored default menu bar." if restored_menus
+              else "Menu bar already default.")
+        print("Restored %d addon menu(s): %s"
+              % (len(restored_addons), ", ".join(restored_addons) or "none"))
         return 0
 
     template = load_template(args.template)
     profile = template.get("profile", {})
     hidden = apply_menu_profile(ctx, template.get("menus", {}))
+    hidden_addons = apply_addon_profile(ctx, template.get("addons", {}))
     print("Applied profile: %s" % profile.get("name", args.template))
     print("Hidden %d menu(s): %s" % (len(hidden), ", ".join(hidden) or "none"))
+    print("Hidden %d addon menu(s): %s"
+          % (len(hidden_addons), ", ".join(hidden_addons) or "none"))
     return 0
 
 

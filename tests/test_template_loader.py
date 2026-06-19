@@ -56,6 +56,23 @@ class LoadTemplateTest(unittest.TestCase):
             with self.assertRaises(TemplateError):
                 load_template(path)
 
+    def test_addons_optional_and_validated(self):
+        with tempfile.TemporaryDirectory() as d:
+            # Valid addons section.
+            path = _write(d, {"application": "writer", "menus": {},
+                              "addons": {"org.example.addon": False}})
+            self.assertEqual(load_template(path)["addons"]["org.example.addon"], False)
+            # Non-boolean addon value is rejected.
+            bad = _write(d, {"application": "writer", "menus": {},
+                             "addons": {"org.example.addon": "no"}})
+            with self.assertRaises(TemplateError):
+                load_template(bad)
+
+    def test_bundled_templates_have_addons_section(self):
+        for name in ("writer-level-1", "writer-level-2", "writer-full"):
+            template = load_template(str(ROOT / "templates" / (name + ".louim")))
+            self.assertIsInstance(template["addons"], dict)
+
 
 if __name__ == "__main__":
     unittest.main()

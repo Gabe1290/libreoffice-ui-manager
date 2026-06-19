@@ -79,6 +79,26 @@ outside the package.
   exactly File/Edit/Format/Help, and restore returns all 11 menus, leaving the
   profile clean.
 
+- **Apply Engine v1 (extension menus)** — `src/louim/adapters/writer/addons.py`
+  handles menus contributed by *other* extensions (e.g. Dmaths), which are
+  merged separately from the built-in menu bar and keyed by config node name in
+  a template's `addons` section. `apply_addon_profile` hides them by removing
+  Writer from each addon's `Context` (saving the original to a state file in the
+  user profile); `restore_addon_menus` writes the originals back. Takes effect
+  for newly opened Writer windows. Verified in the GUI: Dmaths hides and
+  restores. LOUIM's own menu is always excluded.
+
+  Note: addon-menu changes persist via config `commitChanges()`; a normally
+  running LibreOffice flushes them. (Abruptly killing a headless instance right
+  after a commit can lose the last write — relevant only to test harnesses.)
+
+## Known fix
+
+The extension's own menu did not render because its `Addons.xcu` entry had no
+`Context`. Recent LibreOffice requires one for top-level addon menus. Fixed by
+binding the LOUIM menu to the Writer document modules. Confirmed in the GUI: the
+"LibreOffice UI Manager" menu shows and "Hello LOUIM" opens the dialog.
+
 ## Resume Prompt
 
 Continue LOUIM from PROJECT.md

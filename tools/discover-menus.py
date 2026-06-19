@@ -26,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 import uno  # noqa: E402  (provided by the LibreOffice Python/UNO bridge)
 
 from louim.adapters.writer.menubar import discover_top_level_menus  # noqa: E402
+from louim.adapters.writer.addons import discover_addon_menus  # noqa: E402
 
 
 def connect(host, port):
@@ -56,9 +57,14 @@ def main():
         return 1
 
     menus = discover_top_level_menus(ctx)
-    print("Discovered %d top-level Writer menus:" % len(menus))
+    print("Discovered %d built-in Writer menus:" % len(menus))
     for menu in menus:
         print("  %-24s %s" % (menu["command"], menu["label"]))
+
+    addons = discover_addon_menus(ctx)
+    print("\nDiscovered %d extension menu(s) in Writer:" % len(addons))
+    for addon in addons:
+        print("  %-45s %s" % (addon["node"], addon["title"]))
     return 0
 
 

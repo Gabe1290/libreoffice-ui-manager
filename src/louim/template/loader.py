@@ -33,13 +33,18 @@ def load_template(path):
             % data.get("application")
         )
 
-    menus = data.get("menus", {})
-    if not isinstance(menus, dict):
-        raise TemplateError("'menus' must be a JSON object")
-    for command, visible in menus.items():
-        if not isinstance(visible, bool):
-            raise TemplateError(
-                "menu %r must map to true or false, got %r" % (command, visible)
-            )
+    _validate_bool_map(data.get("menus", {}), "menus", "menu")
+    _validate_bool_map(data.get("addons", {}), "addons", "addon")
 
     return data
+
+
+def _validate_bool_map(value, field, item):
+    """Validate that ``value`` is a JSON object mapping strings to booleans."""
+    if not isinstance(value, dict):
+        raise TemplateError("'%s' must be a JSON object" % field)
+    for key, visible in value.items():
+        if not isinstance(visible, bool):
+            raise TemplateError(
+                "%s %r must map to true or false, got %r" % (item, key, visible)
+            )

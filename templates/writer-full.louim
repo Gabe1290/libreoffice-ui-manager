@@ -18,5 +18,6 @@
     ".uno:WindowList": true,
     ".uno:HelpMenu": true
   },
+  "addons": {},
   "toolbars": {}
 }

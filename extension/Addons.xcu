@@ -11,6 +11,12 @@
                 <prop oor:name="Title" oor:type="xs:string">
                     <value>LibreOffice UI Manager</value>
                 </prop>
+                <!-- Without a Context, this top-level menu does not render in
+                     recent LibreOffice versions. LOUIM is a Writer tool, so
+                     bind it to the Writer document modules. -->
+                <prop oor:name="Context" oor:type="xs:string">
+                    <value>com.sun.star.text.TextDocument,com.sun.star.text.GlobalDocument</value>
+                </prop>
                 <prop oor:name="Target" oor:type="xs:string">
                     <value>_self</value>
                 </prop>
