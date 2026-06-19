@@ -6,14 +6,14 @@
     "description": "Very simple Writer interface for beginners."
   },
   "menus": {
-    ".uno:FileMenu": true,
+    ".uno:PickList": true,
     ".uno:EditMenu": true,
     ".uno:ViewMenu": false,
     ".uno:InsertMenu": false,
     ".uno:FormatMenu": true,
-    ".uno:StylesMenu": false,
+    ".uno:FormatStylesMenu": false,
     ".uno:TableMenu": false,
-    ".uno:FormMenu": false,
+    ".uno:FormatFormMenu": false,
     ".uno:ToolsMenu": false,
     ".uno:WindowList": false,
     ".uno:HelpMenu": true
