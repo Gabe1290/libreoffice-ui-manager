@@ -142,6 +142,29 @@ def discover_addon_menus(ctx):
     return menus
 
 
+def addon_visibility(ctx):
+    """Snapshot whether each extension menu is currently shown in Writer.
+
+    Returns a dict mapping addon node name to a bool (True = shows in Writer).
+    Both currently-shown and currently-hidden addons are included, so this is a
+    faithful basis for exporting the current interface as a template. LOUIM's own
+    menu is excluded.
+    """
+    provider = _config_provider(ctx)
+    access = _read_access(provider, ADDONS_NODE)
+
+    snapshot = {}
+    for node in access.getElementNames():
+        if node == LOUIM_OWN_NODE:
+            continue
+        try:
+            context = access.getByName(node).getByName("Context")
+        except Exception:  # noqa: BLE001
+            context = ""
+        snapshot[node] = _shows_in_writer(context or "")
+    return snapshot
+
+
 def _context_of(provider, node):
     return _read_access(provider, _addon_path(node)).getByName("Context") or ""
 

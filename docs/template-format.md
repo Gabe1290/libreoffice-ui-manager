@@ -85,19 +85,39 @@ toolbar's **resource URL** to a boolean (`true` = visible, `false` = hidden):
 ```
 
 Resource URLs all start with `private:resource/toolbar/` and are
-language-independent. Toolbars not listed keep their current visibility.
+language-independent. `true` shows the toolbar, `false` hides it (by setting its
+persistent `Visible` state in Writer's window-state configuration, so the change
+survives a restart and applies to newly opened Writer windows). Toolbars not
+listed are left at the user's own state.
 
-`false` hides the toolbar by setting its persistent `Visible` state to off in
-Writer's window-state configuration, so the change survives a restart and
-applies to newly opened Writer windows. `true` un-hides a toolbar that an
-earlier LOUIM template hid; it never *forces* a toolbar on, so contextual bars
-(Table, Drawing) keep their normal show-in-context behaviour. To bring a hidden
-toolbar back when moving to a lighter profile, list it as `true` in the new
-template — that is why the bundled levels share the same toolbar keys with
-different values.
+Applying a template's toolbars is **non-cumulative**, like the menu bar: each
+Apply first rolls back any toolbar LOUIM changed previously, then applies the new
+profile against the user's original layout. So an empty `toolbars` section
+(see `writer-full`) restores the user's default toolbars, and switching profiles
+never leaves a leftover blend.
+
+Because `true` genuinely forces a toolbar visible, it can turn an
+optional-but-off toolbar on — that is how the bundled `writer-level-1` shows the
+Drawing toolbar. Do not list a **contextual** toolbar (one shown only in a
+context, e.g. `tableobjectbar` inside a table) as `true`, or it will be pinned
+open everywhere. The bundled templates only manage ordinary toggleable toolbars.
 
 "Restore Full Menus" returns every toolbar LOUIM hid to exactly the state it
 had before (including removing a window-state entry LOUIM had to create).
 
 Run `tools/discover-menus.py` to list the exact toolbar resource URLs and their
 display names for your LibreOffice version.
+
+## Creating and editing your own templates
+
+A `.louim` file is plain JSON — copy one of the bundled templates (or export your
+current setup, below) and edit it in any text editor. Use `true`/`false` to show
+or hide each menu, extension menu, and toolbar; keep the UNO command IDs and
+resource URLs exactly as discovered (they are language-independent — never put a
+localized label in the file).
+
+To start from what you already have, use **LibreOffice UI Manager > Save Current
+Layout as Template...**. LOUIM snapshots the current visibility of the top-level
+menus, extension menus, and toolbars into a new `.louim` file, which you can then
+trim and rename. The command-line equivalent is `tools/export-template.py`
+(run against a Writer started with a UNO socket).

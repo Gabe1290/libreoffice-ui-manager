@@ -118,6 +118,27 @@ def discover_toolbars(ctx):
     return toolbars
 
 
+def toolbar_visibility(ctx):
+    """Snapshot the persisted visibility of Writer toolbars.
+
+    Returns a dict mapping toolbar resource URL to a bool (its current
+    window-state ``Visible`` value). Only toolbars that carry an explicit
+    window-state entry are included — those are exactly the ones the user (or
+    LOUIM) has turned on or off, which is what makes a meaningful exported
+    template. Toolbars left at their built-in default are omitted.
+    """
+    states = _read_access(_config_provider(ctx), WINDOWSTATE_NODE)
+    snapshot = {}
+    for resource in states.getElementNames():
+        if not resource.startswith(TOOLBAR_PREFIX):
+            continue
+        try:
+            snapshot[resource] = bool(states.getByName(resource).getByName("Visible"))
+        except Exception:  # noqa: BLE001 — entry without a Visible prop; skip
+            continue
+    return snapshot
+
+
 def _set_visible(provider, resource, visible):
     """Set a toolbar's persistent Visible flag, creating its state if needed.
 
@@ -157,41 +178,53 @@ def _restore_one(provider, resource, record):
 
 
 def apply_toolbar_profile(ctx, toolbars, path=None):
-    """Hide/show whole toolbars in Writer per a "toolbars" profile.
+    """Show/hide whole toolbars in Writer per a "toolbars" profile.
 
-    ``toolbars`` maps toolbar resource URLs to booleans. ``False`` hides the
-    toolbar; ``True`` un-hides one LOUIM previously hid (and is otherwise a
-    no-op — it never *forces* a toolbar on, so contextual bars keep their normal
-    behaviour). Resources not mentioned are left untouched. Returns the list of
-    resource URLs that were hidden.
+    ``toolbars`` maps toolbar resource URLs to booleans: ``True`` shows the
+    toolbar, ``False`` hides it (by setting its persistent ``Visible`` state in
+    Writer's window-state configuration). Resources not mentioned are left at
+    their pre-LOUIM state. Returns the list of resource URLs that were hidden.
+
+    Applying is **non-cumulative**, exactly like the menu bar: every call first
+    rolls back any toolbar LOUIM changed on a previous apply, so the profile is
+    always interpreted against the user's own original toolbar layout. Applying
+    level-1 then writer-full therefore yields writer-full, not a leftover blend,
+    and an empty profile restores the user's defaults.
 
     The pre-LOUIM Visible state of each affected toolbar is saved to the state
-    file before the first change, so ``restore_toolbars`` can reproduce it
-    exactly — even across restarts, and even for toolbars LOUIM had to create a
+    file so ``restore_toolbars`` (and the rollback above) can reproduce it
+    exactly — even across restarts, and even for a toolbar LOUIM had to create a
     window-state entry for.
+
+    Note: ``True`` genuinely forces a toolbar visible. That is what makes
+    "show the Drawing toolbar for beginners" work, but it means listing a
+    *contextual* toolbar (e.g. ``tableobjectbar``, shown only inside a table) as
+    ``True`` will pin it open. The bundled templates only manage ordinary
+    toggleable toolbars; hand-authored templates should do the same.
     """
     path = path or state_path(ctx)
     provider = _config_provider(ctx)
     state = _load_state(path)
+
+    # Roll back any previous LOUIM toolbar change so this profile is applied
+    # against the user's original layout (non-cumulative, like the menu bar).
+    for resource, record in list(state.items()):
+        try:
+            _restore_one(provider, resource, record)
+        except Exception:  # noqa: BLE001
+            pass
+    state = {}
 
     hidden = []
     for resource, visible in toolbars.items():
         if not resource.startswith(TOOLBAR_PREFIX):
             continue  # only manage genuine toolbar resources
         try:
+            record = _set_visible(provider, resource, bool(visible))
+            if resource not in state:
+                state[resource] = record  # remember the original for restore
             if visible is False:
-                record = _set_visible(provider, resource, False)
-                if resource not in state:
-                    state[resource] = record  # remember the original
                 hidden.append(resource)
-            else:
-                # Explicitly visible: undo our hide if we made one, but never
-                # *force* a toolbar on. Forcing Visible=true would pin a
-                # contextual toolbar (Table, Drawing) open outside its context;
-                # for toolbars LOUIM never hid, LibreOffice's own default and
-                # context handling must stand. (Same rule as addons.py.)
-                if resource in state:
-                    _restore_one(provider, resource, state.pop(resource))
         except Exception:  # noqa: BLE001 — unknown/locked resource, skip it
             continue
 

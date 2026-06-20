@@ -99,6 +99,38 @@ def _pick_template(ctx):
     return uno.fileUrlToSystemPath(files[0]) if files else None
 
 
+def _pick_save_path(ctx):
+    """Open a Save dialog for a new .louim template; return a path or None."""
+    from com.sun.star.ui.dialogs.ExecutableDialogResults import OK
+    from com.sun.star.ui.dialogs.TemplateDescription import (
+        FILESAVE_AUTOEXTENSION,
+    )
+
+    smgr = ctx.getServiceManager()
+    picker = smgr.createInstanceWithContext(
+        "com.sun.star.ui.dialogs.FilePicker", ctx
+    )
+    picker.initialize((FILESAVE_AUTOEXTENSION,))
+    picker.setTitle("Save current layout as a LOUIM template")
+    picker.appendFilter("LOUIM templates (*.louim)", "*.louim")
+    picker.setCurrentFilter("LOUIM templates (*.louim)")
+    picker.setDefaultName("my-template.louim")
+
+    url = _package_url(ctx)
+    if url:
+        templates_url = url.rstrip("/") + "/templates"
+        try:
+            if os.path.isdir(uno.fileUrlToSystemPath(templates_url)):
+                picker.setDisplayDirectory(templates_url)
+        except Exception:  # noqa: BLE001
+            pass
+
+    if picker.execute() != OK:
+        return None
+    files = picker.getSelectedFiles()
+    return uno.fileUrlToSystemPath(files[0]) if files else None
+
+
 def hello(*args):
     """Temporary smoke-test entry point for the first LOUIM extension."""
     ctx = XSCRIPTCONTEXT.getComponentContext()
@@ -166,5 +198,31 @@ def restore_menus(*args):
         _message_box(ctx, "LOUIM error", str(exc))
 
 
+def export_template(*args):
+    """Snapshot Writer's current interface and save it as a .louim template."""
+    ctx = XSCRIPTCONTEXT.getComponentContext()
+    try:
+        _ensure_package_path(ctx)
+        from louim.template.saver import build_current_template, save_template
+
+        path = _pick_save_path(ctx)
+        if not path:
+            return  # user cancelled
+
+        name = os.path.splitext(os.path.basename(path))[0]
+        template = build_current_template(ctx, name=name)
+        save_template(path, template)
+        _message_box(
+            ctx,
+            "LibreOffice UI Manager",
+            'Saved the current layout as "%s".\n\n'
+            "It is a plain-text .louim (JSON) file — open it in any text editor "
+            "to fine-tune which menus and toolbars are shown, then share it with "
+            "other machines via Apply Template..." % os.path.basename(path),
+        )
+    except Exception as exc:  # noqa: BLE001
+        _message_box(ctx, "LOUIM error", str(exc))
+
+
 # Expose the entry points to the LibreOffice script provider.
-g_exportedScripts = (hello, apply_template, restore_menus)
+g_exportedScripts = (hello, apply_template, restore_menus, export_template)

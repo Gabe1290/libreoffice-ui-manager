@@ -20,11 +20,8 @@
   },
   "addons": {},
   "toolbars": {
-    "private:resource/toolbar/standardbar": true,
-    "private:resource/toolbar/textobjectbar": true,
-    "private:resource/toolbar/findbar": false,
+    "private:resource/toolbar/drawbar": true,
     "private:resource/toolbar/insertbar": false,
-    "private:resource/toolbar/tableobjectbar": false,
-    "private:resource/toolbar/drawbar": false
+    "private:resource/toolbar/findbar": false
   }
 }

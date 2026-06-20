@@ -56,17 +56,47 @@ outside the package.
 
 ## Next Session Tasks
 
-1. GUI-verify the populated templates in a real Writer window: install the
-   freshly built `dist/louim.oxt`, Apply "Getting Started" and confirm the
-   Find/Insert/Table/Drawing toolbars stay hidden (open a table to check the
-   Table toolbar does not pop in), then Apply "Basic Editing" / "Complete
-   Writer" and confirm they return. The config-level behaviour is already
-   verified headlessly (see below); this is the on-screen confirmation.
+1. GUI-verify in a real Writer window (config behaviour already verified live —
+   see below): Apply "Getting Started" and confirm the Drawing toolbar appears
+   and Find/Insert are gone; "Save Current Layout as Template..." writes a
+   .louim you can reopen; Apply it back. Then confirm "Complete Writer" / the
+   Restore entry return the full interface.
 2. Extend discovery/apply to submenu items (individual entries inside a menu)
    and the sidebar per the architecture.
 3. Discovery returns empty labels when run without an open document frame —
    make discovery resolve display names (open/locate a Writer frame) so the
-   teacher-facing UI can show real toolbar/menu names.
+   teacher-facing UI and exported templates can show real names.
+4. Export currently snapshots every toolbar that has a window-state entry (~58)
+   — consider trimming to a curated/"interesting" set so exported templates are
+   less verbose for teachers to edit.
+
+## Done — Template export + Drawing-in-level-1 (Apply Engine v2.1)
+
+Three changes driven by classroom feedback:
+
+- **Drawing toolbar shows in level-1.** Toolbar apply is now **non-cumulative**
+  (rolls back prior LOUIM toolbar changes first, like the menu bar) with honest
+  force semantics: `true` shows a toolbar (even one off by default, e.g.
+  Drawing), `false` hides it, empty `toolbars` (writer-full) resets to the
+  user's defaults. Replaces the earlier "true never forces" rule, which couldn't
+  satisfy "show Drawing for beginners". Bundled templates only manage ordinary
+  toggleable toolbars; listing a *contextual* bar (`tableobjectbar`) as `true`
+  would pin it open — documented in `docs/template-format.md`.
+- **Export / create-your-own templates.** New `src/louim/template/saver.py`
+  (`assemble_template`, `save_template`, `build_current_template`) snapshots the
+  live interface into a `.louim`. Visibility snapshots added to each adapter
+  (`menu_visibility`, `toolbar_visibility`, `addon_visibility`). New extension
+  entry point `export_template` + menu "Save Current Layout as Template..."
+  (`extension/Addons.xcu`), plus `tools/export-template.py`. Templates are plain
+  JSON, editable in any text editor (docs section added).
+- Tests: 15 pass (added saver round-trip suite).
+
+**Live-verified** against a running Writer (`tools/_verify_tmp.py`, throwaway):
+menu apply hides 7 / keeps 4 and restore returns all 11; level-1 toolbars force
+Drawing **on** (was off) and hide Find, and writer-full + restore is net-zero;
+export snapshots 11 menus + 58 toolbars, saves, and reloads through the loader
+cleanly. So the menu apply/restore path is now live-verified too (previously only
+headless via the script provider).
 
 ## Done — Toolbar hide/restore (Apply Engine v2)
 

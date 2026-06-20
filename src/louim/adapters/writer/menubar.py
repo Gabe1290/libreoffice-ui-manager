@@ -58,6 +58,26 @@ def discover_top_level_menus(ctx):
     return menus
 
 
+def menu_visibility(ctx):
+    """Snapshot the current visibility of every top-level Writer menu.
+
+    Returns a dict mapping each factory-default menu's UNO command ID to a bool
+    (True = currently shown in the live menu bar, False = currently hidden). This
+    is the shape a .louim template's "menus" section uses, so it is the basis for
+    exporting the current interface as a template.
+    """
+    ui_cfg = _module_ui_config(ctx)
+    default = ui_cfg.getDefaultSettings(MENUBAR_RESOURCE)
+
+    visible_now = {m["command"] for m in discover_top_level_menus(ctx)}
+    snapshot = {}
+    for i in range(default.getCount()):
+        command = _props_to_dict(default.getByIndex(i)).get("CommandURL")
+        if command:
+            snapshot[command] = command in visible_now
+    return snapshot
+
+
 def apply_menu_profile(ctx, menus):
     """Apply a menu visibility profile to Writer's top-level menu bar.
 
