@@ -116,6 +116,7 @@ def apply_template(*args):
         from louim.template.loader import load_template, TemplateError
         from louim.adapters.writer.menubar import apply_menu_profile
         from louim.adapters.writer.addons import apply_addon_profile
+        from louim.adapters.writer.toolbars import apply_toolbar_profile
 
         path = _pick_template(ctx)
         if not path:
@@ -129,13 +130,15 @@ def apply_template(*args):
 
         hidden = apply_menu_profile(ctx, template.get("menus", {}))
         hidden_addons = apply_addon_profile(ctx, template.get("addons", {}))
+        hidden_toolbars = apply_toolbar_profile(ctx, template.get("toolbars", {}))
         name = template.get("profile", {}).get("name") or os.path.basename(path)
         _message_box(
             ctx,
             "LibreOffice UI Manager",
-            'Applied "%s".\n\nHidden %d menu(s) and %d extension menu(s).\n'
-            "Reopen the document if the menu bar has not refreshed."
-            % (name, len(hidden), len(hidden_addons)),
+            'Applied "%s".\n\nHidden %d menu(s), %d extension menu(s), and '
+            "%d toolbar(s).\n"
+            "Reopen the document if the interface has not refreshed."
+            % (name, len(hidden), len(hidden_addons), len(hidden_toolbars)),
         )
     except Exception as exc:  # noqa: BLE001 — never let a macro crash silently
         _message_box(ctx, "LOUIM error", str(exc))
@@ -148,14 +151,16 @@ def restore_menus(*args):
         _ensure_package_path(ctx)
         from louim.adapters.writer.menubar import restore_default_menus
         from louim.adapters.writer.addons import restore_addon_menus
+        from louim.adapters.writer.toolbars import restore_toolbars
 
         restore_default_menus(ctx)
         restore_addon_menus(ctx)
+        restore_toolbars(ctx)
         _message_box(
             ctx,
             "LibreOffice UI Manager",
             "Restored the full Writer interface.\n"
-            "Reopen the document if the menu bar has not refreshed.",
+            "Reopen the document if the interface has not refreshed.",
         )
     except Exception as exc:  # noqa: BLE001
         _message_box(ctx, "LOUIM error", str(exc))

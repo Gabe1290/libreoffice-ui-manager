@@ -71,3 +71,27 @@ configuration node name rather than a `.uno:` command:
 
 Run `tools/discover-menus.py` to list the extension menus available in Writer
 and their node names. LOUIM never hides its own menu.
+
+## Toolbars
+
+The optional `toolbars` object hides or shows whole Writer toolbars. It maps a
+toolbar's **resource URL** to a boolean (`true` = visible, `false` = hidden):
+
+```json
+"toolbars": {
+  "private:resource/toolbar/standardbar": true,
+  "private:resource/toolbar/tablebar": false
+}
+```
+
+Resource URLs all start with `private:resource/toolbar/` and are
+language-independent. Toolbars not listed keep their current visibility.
+
+Hiding sets the toolbar's persistent `Visible` state to off in Writer's
+window-state configuration, so the change survives a restart and applies to
+newly opened Writer windows. "Restore Full Menus" returns every toolbar LOUIM
+hid to exactly the state it had before (including removing a window-state entry
+LOUIM had to create).
+
+Run `tools/discover-menus.py` to list the exact toolbar resource URLs and their
+display names for your LibreOffice version.

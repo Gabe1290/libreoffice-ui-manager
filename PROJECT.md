@@ -56,13 +56,40 @@ outside the package.
 
 ## Next Session Tasks
 
-1. GUI-verify the new menu entries (install `dist/louim.oxt` via Extension
-   Manager, restart): "Apply Template..." picks a `.louim` and the menu bar
-   simplifies; "Restore Full Menus" brings all menus back. The picker should
-   now open in the bundled `templates/` folder (writer-full / writer-level-1 /
-   writer-level-2) by default.
-2. Extend discovery/apply beyond the top-level menu bar (submenu items,
-   toolbars, sidebar) per the architecture.
+1. GUI-verify toolbar hide/restore: run `tools/discover-menus.py` against a
+   running Writer to get the real toolbar resource URLs, add a couple to a
+   template's `toolbars` section (e.g. `private:resource/toolbar/tablebar`:
+   false), Apply Template..., and confirm those toolbars disappear for newly
+   opened Writer windows and come back with "Restore Full Menus".
+2. Populate the bundled level-1/level-2 templates with sensible `toolbars`
+   entries once the real resource URLs are confirmed (kept empty for now to
+   avoid shipping unverified IDs).
+3. Extend discovery/apply to submenu items (individual entries inside a menu)
+   and the sidebar per the architecture.
+
+## Done — Toolbar hide/restore (Apply Engine v2)
+
+`src/louim/adapters/writer/toolbars.py` extends the engine beyond the menu bar
+to whole toolbars, following the addons.py pattern (config node + user-profile
+state file, restorable across restarts):
+
+- `discover_toolbars(ctx)` — lists Writer toolbars as
+  `{"resource": "private:resource/toolbar/standardbar", "label": "Standard"}`
+  via the module UI config's `getUIElementsInfo(TOOLBAR)`.
+- `apply_toolbar_profile(ctx, toolbars)` — for each resource URL marked `false`,
+  sets `Visible=false` in `org.openoffice.Office.UI.WriterWindowState /
+  UIElements/States`, creating the state element if Writer never persisted one.
+  Saves the pre-LOUIM state (original `Visible`, or "did not exist") to
+  `louim-toolbar-state.json`.
+- `restore_toolbars(ctx)` — replays the saved state exactly, including removing
+  an element LOUIM had to create.
+
+Wired into `extension.py` (apply_template / restore_menus) and both dev tools
+(`discover-menus.py`, `apply-template.py`). Template `toolbars` section is now
+validated by the loader and documented in `docs/template-format.md`. Tests:
+10 pass (added toolbar-section validation). Build packages the adapter into
+`dist/louim.oxt`. **Not yet GUI-verified** — see task 1 (need real resource URLs
+from a running Writer; the mechanism is untested against a live instance).
 
 ## Done — Apply Engine wired into the extension UI
 

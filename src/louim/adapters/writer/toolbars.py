@@ -1,0 +1,215 @@
+# LibreOffice UI Manager — Writer toolbar adapter.
+#
+# Toolbars are not part of the menu bar resource managed by menubar.py. Their
+# persistent visibility lives in the module window-state configuration
+#
+#     org.openoffice.Office.UI.WriterWindowState / UIElements / States
+#
+# which is a configuration *set* keyed by toolbar resource URL (for example
+# ``private:resource/toolbar/standardbar``). Each element carries a ``Visible``
+# boolean (plus docking/position state). Toggling a toolbar via View > Toolbars
+# writes here, which is why the change survives a restart.
+#
+# To hide a toolbar we set ``Visible = false`` on its state element, creating the
+# element if Writer has never persisted one. To restore we put back exactly what
+# was there before — including *removing* an element we had to create — using a
+# state file in the user profile, mirroring addons.py. Changes take effect for
+# newly opened Writer windows.
+
+import json
+import os
+
+import uno
+
+# The window-state set for Writer toolbars.
+WINDOWSTATE_NODE = "/org.openoffice.Office.UI.WriterWindowState/UIElements/States"
+
+# Resource-URL prefix that identifies a toolbar (as opposed to a statusbar,
+# menubar, etc.) in the window-state set.
+TOOLBAR_PREFIX = "private:resource/toolbar/"
+
+STATE_FILENAME = "louim-toolbar-state.json"
+
+
+def _config_provider(ctx):
+    return ctx.getServiceManager().createInstanceWithContext(
+        "com.sun.star.configuration.ConfigurationProvider", ctx
+    )
+
+
+def _make_nodepath_arg(node):
+    arg = uno.createUnoStruct("com.sun.star.beans.PropertyValue")
+    arg.Name = "nodepath"
+    arg.Value = node
+    return arg
+
+
+def _read_access(provider, node):
+    return provider.createInstanceWithArguments(
+        "com.sun.star.configuration.ConfigurationAccess", (_make_nodepath_arg(node),)
+    )
+
+
+def _update_access(provider, node):
+    return provider.createInstanceWithArguments(
+        "com.sun.star.configuration.ConfigurationUpdateAccess",
+        (_make_nodepath_arg(node),),
+    )
+
+
+def _module_ui_config(ctx):
+    """Return the module-level UI configuration manager for Writer."""
+    smgr = ctx.getServiceManager()
+    supplier = smgr.createInstanceWithContext(
+        "com.sun.star.ui.ModuleUIConfigurationManagerSupplier", ctx
+    )
+    return supplier.getUIConfigurationManager("com.sun.star.text.TextDocument")
+
+
+def _props_to_dict(props):
+    return {p.Name: p.Value for p in props}
+
+
+def state_path(ctx):
+    """Absolute path of the LOUIM toolbar-state file in the user profile."""
+    ps = ctx.getServiceManager().createInstanceWithContext(
+        "com.sun.star.util.PathSubstitution", ctx
+    )
+    user_dir = uno.fileUrlToSystemPath(ps.getSubstituteVariableValue("$(user)"))
+    return os.path.join(user_dir, STATE_FILENAME)
+
+
+def _load_state(path):
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            return json.load(handle)
+    except (FileNotFoundError, ValueError):
+        return {}
+
+
+def _save_state(path, state):
+    if state:
+        with open(path, "w", encoding="utf-8") as handle:
+            json.dump(state, handle, indent=2)
+    elif os.path.exists(path):
+        os.remove(path)
+
+
+def discover_toolbars(ctx):
+    """Discover Writer's toolbars.
+
+    Returns a list of dicts in configuration order, each:
+        {"resource": "private:resource/toolbar/standardbar", "label": "Standard"}
+
+    ``resource`` is the language-independent toolbar resource URL used as the key
+    in a .louim template's "toolbars" section; ``label`` (the toolbar's UIName)
+    is for display only and is never stored in a template.
+    """
+    from com.sun.star.ui.UIElementType import TOOLBAR
+
+    ui_cfg = _module_ui_config(ctx)
+    toolbars = []
+    for info in ui_cfg.getUIElementsInfo(TOOLBAR):
+        entry = _props_to_dict(info)
+        resource = entry.get("ResourceURL")
+        if not resource:
+            continue
+        toolbars.append({"resource": resource, "label": entry.get("UIName", "")})
+    return toolbars
+
+
+def _set_visible(provider, resource, visible):
+    """Set a toolbar's persistent Visible flag, creating its state if needed.
+
+    Returns the record needed to undo this change later: the original Visible
+    value if the element already existed, or None if we had to create it (so
+    restore knows to remove it again).
+    """
+    states = _update_access(provider, WINDOWSTATE_NODE)
+    if states.hasByName(resource):
+        element = states.getByName(resource)
+        try:
+            original = bool(element.getByName("Visible"))
+        except Exception:  # noqa: BLE001 — property may be absent; assume visible
+            original = True
+        element.setPropertyValue("Visible", visible)
+        states.commitChanges()
+        return {"existed": True, "visible": original}
+
+    # No persisted state yet: create one carrying just the Visible flag.
+    element = states.createInstance()
+    element.setPropertyValue("Visible", visible)
+    states.insertByName(resource, element)
+    states.commitChanges()
+    return {"existed": False}
+
+
+def _restore_one(provider, resource, record):
+    states = _update_access(provider, WINDOWSTATE_NODE)
+    if record.get("existed"):
+        if states.hasByName(resource):
+            states.getByName(resource).setPropertyValue(
+                "Visible", record.get("visible", True)
+            )
+    elif states.hasByName(resource):
+        states.removeByName(resource)
+    states.commitChanges()
+
+
+def apply_toolbar_profile(ctx, toolbars, path=None):
+    """Hide/show whole toolbars in Writer per a "toolbars" profile.
+
+    ``toolbars`` maps toolbar resource URLs to booleans (True = visible,
+    False = hidden). Resources not mentioned are left untouched. Returns the
+    list of resource URLs that were hidden.
+
+    The pre-LOUIM Visible state of each affected toolbar is saved to the state
+    file before the first change, so ``restore_toolbars`` can reproduce it
+    exactly — even across restarts, and even for toolbars LOUIM had to create a
+    window-state entry for.
+    """
+    path = path or state_path(ctx)
+    provider = _config_provider(ctx)
+    state = _load_state(path)
+
+    hidden = []
+    for resource, visible in toolbars.items():
+        if not resource.startswith(TOOLBAR_PREFIX):
+            continue  # only manage genuine toolbar resources
+        try:
+            if visible is False:
+                record = _set_visible(provider, resource, False)
+                if resource not in state:
+                    state[resource] = record  # remember the original
+                hidden.append(resource)
+            else:
+                # Explicitly visible: undo our change if we had hidden it.
+                if resource in state:
+                    _restore_one(provider, resource, state.pop(resource))
+                else:
+                    _set_visible(provider, resource, True)
+        except Exception:  # noqa: BLE001 — unknown/locked resource, skip it
+            continue
+
+    _save_state(path, state)
+    return hidden
+
+
+def restore_toolbars(ctx, path=None):
+    """Restore every toolbar LOUIM hid to its original window state.
+
+    Returns the list of resource URLs restored.
+    """
+    path = path or state_path(ctx)
+    provider = _config_provider(ctx)
+    state = _load_state(path)
+
+    restored = []
+    for resource, record in list(state.items()):
+        try:
+            _restore_one(provider, resource, record)
+            restored.append(resource)
+        except Exception:  # noqa: BLE001
+            pass
+    _save_state(path, {})
+    return restored

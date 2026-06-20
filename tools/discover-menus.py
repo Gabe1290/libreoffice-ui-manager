@@ -27,6 +27,7 @@ import uno  # noqa: E402  (provided by the LibreOffice Python/UNO bridge)
 
 from louim.adapters.writer.menubar import discover_top_level_menus  # noqa: E402
 from louim.adapters.writer.addons import discover_addon_menus  # noqa: E402
+from louim.adapters.writer.toolbars import discover_toolbars  # noqa: E402
 
 
 def connect(host, port):
@@ -65,6 +66,11 @@ def main():
     print("\nDiscovered %d extension menu(s) in Writer:" % len(addons))
     for addon in addons:
         print("  %-45s %s" % (addon["node"], addon["title"]))
+
+    toolbars = discover_toolbars(ctx)
+    print("\nDiscovered %d Writer toolbar(s):" % len(toolbars))
+    for toolbar in toolbars:
+        print("  %-45s %s" % (toolbar["resource"], toolbar["label"]))
     return 0
 
 
