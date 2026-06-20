@@ -41,11 +41,15 @@ process serves them all). Read before doing any live verification.
 5. **LOUIM must only ever change UI configuration** — menus, toolbar visibility,
    and extension-menu context. It must **never** touch rendering/graphics
    settings (Skia, OpenGL, hardware acceleration) or other unrelated options.
-   Note for triage: if Writer shows a **blank/invisible document but still
-   registers typing** (asks to save), that is a **Skia rendering** problem in
-   LibreOffice itself, *not* LOUIM — fix via Tools ▸ Options ▸ LibreOffice ▸
-   View ▸ uncheck "Use Skia for all rendering" (or set `UseSkia` to `false` in
-   `registrymodifications.xcu` while LibreOffice is closed).
+
+   Triage note (learned 2026-06-20): hammering the live instance corrupted the
+   **user profile** so badly that Writer showed a **blank/invisible document but
+   still registered typing** (asked to save on close). This looked like a Skia
+   rendering bug — toggling `UseSkia` to `false` did **not** fix it. What fixed
+   it was a **fresh user profile** (a full uninstall+reinstall; deleting
+   `%APPDATA%\LibreOffice\4\user` so LibreOffice regenerates it does the same).
+   So if the interface misbehaves after any LibreOffice interaction, suspect a
+   corrupted profile first and reset it — don't chase Skia.
 
 ## Recovery, if a test breaks LibreOffice
 
@@ -55,8 +59,12 @@ process serves them all). Read before doing any live verification.
    `config/soffice.cfg/modules/swriter/`, toolbar `Visible` flags in
    `registrymodifications.xcu` (`WriterWindowState`), and LOUIM's own state files
    `louim-*.json` in the profile root.
-4. Relaunch normally. If still broken, `soffice --safe-mode` offers a factory
-   reset, or restore the backup.
+4. Relaunch normally. **If anything is still off, surgical clearing is not
+   enough — reset the whole profile**: rename or delete `%APPDATA%\LibreOffice\4\
+   user` (LibreOffice regenerates a clean one on next launch), or run
+   `soffice --safe-mode` for a guided factory reset. A fresh profile is the
+   fix that actually worked on 2026-06-20; restore the backup afterward only if
+   you need specific settings.
 
 ## How the engine is structured
 
