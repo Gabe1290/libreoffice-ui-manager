@@ -25,7 +25,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 import uno  # noqa: E402  (provided by the LibreOffice Python/UNO bridge)
 
-from louim.adapters.writer.menubar import discover_top_level_menus  # noqa: E402
+from louim.adapters.writer.menubar import (  # noqa: E402
+    discover_top_level_menus,
+    discover_menu_items,
+)
 from louim.adapters.writer.addons import discover_addon_menus  # noqa: E402
 from louim.adapters.writer.toolbars import discover_toolbars  # noqa: E402
 
@@ -46,6 +49,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default="localhost")
     parser.add_argument("--port", type=int, default=2002)
+    parser.add_argument("--tree", action="store_true",
+                        help="also print every menu item, including submenu "
+                             "items, with their UNO IDs (for hiding individual "
+                             "entries in a template)")
     args = parser.parse_args()
 
     try:
@@ -71,6 +78,13 @@ def main():
     print("\nDiscovered %d Writer toolbar(s):" % len(toolbars))
     for toolbar in toolbars:
         print("  %-45s %s" % (toolbar["resource"], toolbar["label"]))
+
+    if args.tree:
+        items = discover_menu_items(ctx)
+        print("\nFull menu tree (%d command items):" % len(items))
+        for item in items:
+            indent = "  " * (item["depth"] + 1)
+            print("%s%-32s %s" % (indent, item["command"], item["label"]))
     return 0
 
 

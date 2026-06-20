@@ -52,9 +52,22 @@ The user interface will display localized names, but the template file always st
 
 ## Built-in menus
 
-The `menus` object maps a top-level menu's UNO command ID to a boolean
-(`true` = visible, `false` = hidden). Hidden menus are removed from Writer's
-menu bar; everything else stays. Commands not listed default to visible.
+The `menus` object maps a UNO command ID to a boolean (`true` = visible,
+`false` = hidden). Commands not listed default to visible.
+
+This works at **any depth**, not just the top-level menu bar. A command can be:
+
+- a top-level menu — `.uno:InsertMenu` hides the whole Insert menu;
+- an item inside a menu — `.uno:InsertPagebreak` hides just that entry;
+- an item inside a submenu — e.g. an entry under Insert ▸ Shapes.
+
+Hiding a menu also removes everything inside it. The menu bar is rebuilt from
+LibreOffice's factory default on every Apply, so the result never depends on
+what was applied before.
+
+To find the UNO ID of an individual item, run `tools/discover-menus.py --tree`
+against a running Writer — it prints the full menu tree, indented, with every
+command ID.
 
 ## Extension menus
 

@@ -61,14 +61,45 @@ outside the package.
    and Find/Insert are gone; "Save Current Layout as Template..." writes a
    .louim you can reopen; Apply it back. Then confirm "Complete Writer" / the
    Restore entry return the full interface.
-2. Extend discovery/apply to submenu items (individual entries inside a menu)
-   and the sidebar per the architecture.
+2. Extend apply to the **sidebar** (decks/panels) per the architecture — the
+   last UI surface after menus, submenu items, toolbars, and extension menus.
 3. Discovery returns empty labels when run without an open document frame —
    make discovery resolve display names (open/locate a Writer frame) so the
    teacher-facing UI and exported templates can show real names.
-4. Export currently snapshots every toolbar that has a window-state entry (~58)
-   — consider trimming to a curated/"interesting" set so exported templates are
-   less verbose for teachers to edit.
+4. Export currently snapshots only top-level menus + toolbars-with-state. Decide
+   whether to also offer nested-item capture (would be large) and trim the ~58
+   toolbar entries to a curated set so exported templates are easier to edit.
+
+## Done — Submenu-item hiding (Apply Engine v3)
+
+`apply_menu_profile` now hides commands at **any depth**, not just top-level
+menus. A template's `menus` map can list an individual item
+(`.uno:InsertPagebreak`) or a deep submenu entry and it is removed; a hidden
+menu still removes everything inside it. The `menus` map shape is unchanged
+(command → bool), so the loader and existing templates need no change.
+
+Mechanism (validated live before coding, then end-to-end):
+
+- Reset to the factory menu bar (`removeSettings`), then take a **writable
+  clone** via `getSettings(MENUBAR, True)` — which yields the full default tree
+  with writable nested `ItemDescriptorContainer`s only because we reset first
+  (otherwise it returns just the customization layer).
+- `_prune_hidden` walks the tree depth-first and `removeByIndex`-es every entry
+  whose command is marked `False` (removing in descending index order so indices
+  don't shift), recursing into survivors' submenus.
+- `replaceSettings` + `store`. Non-cumulative, like the top-level behaviour it
+  replaces — the old build-from-default-into-createSettings path is gone, and
+  `menubar.py` no longer imports `uno` (so the prune logic is unit-tested in CI).
+
+Discovery: new `discover_menu_items(ctx)` returns the full menu tree as a flat
+list with `command`/`label`/`path`/`depth` (553 commands in Writer); surfaced via
+`tools/discover-menus.py --tree` so teachers can find the UNO ID of any item.
+Docs updated. Tests: 21 pass (6 new fake-container prune tests).
+
+**Live-verified** against a running Writer: hiding `.uno:InsertPagebreak` drops
+Insert 34→33 with the menu and the other 10 top-level menus intact; an empty
+profile resets (pagebreak returns); hiding a top-level menu + a nested item
+together works; restore returns the full 11 menus.
 
 ## Done — Template export + Drawing-in-level-1 (Apply Engine v2.1)
 

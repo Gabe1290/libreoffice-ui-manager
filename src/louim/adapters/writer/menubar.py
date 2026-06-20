@@ -10,14 +10,8 @@
 # extension (pass XSCRIPTCONTEXT.getComponentContext()) and from an external
 # socket connection (used by the headless discovery tool / tests).
 
-import uno
-
 WRITER_MODULE = "com.sun.star.text.TextDocument"
 MENUBAR_RESOURCE = "private:resource/menubar/menubar"
-
-# A menu-bar entry is a UNO Sequence<PropertyValue>; index containers need it
-# passed as an explicitly typed Any rather than a bare Python tuple.
-_MENU_ENTRY_TYPE = "[]com.sun.star.beans.PropertyValue"
 
 
 def _module_ui_config(ctx):
@@ -58,6 +52,41 @@ def discover_top_level_menus(ctx):
     return menus
 
 
+def _walk_items(container, path, items):
+    """Append every command entry under ``container`` (depth-first) to ``items``."""
+    for i in range(container.getCount()):
+        entry = _props_to_dict(container.getByIndex(i))
+        command = entry.get("CommandURL")
+        if command:
+            items.append({
+                "command": command,
+                "label": entry.get("Label", ""),
+                "path": list(path),
+                "depth": len(path),
+            })
+        sub = entry.get("ItemDescriptorContainer")
+        if sub is not None:
+            _walk_items(sub, path + [command] if command else list(path), items)
+    return items
+
+
+def discover_menu_items(ctx):
+    """Discover every Writer menu entry, including nested submenu items.
+
+    Returns a flat list in menu order, each:
+        {"command": ".uno:InsertPagebreak", "label": "...",
+         "path": [".uno:InsertMenu"], "depth": 1}
+
+    ``path`` is the chain of parent menu commands, so a teacher can see where a
+    command lives. Separators are skipped. The list is read from the factory
+    default, so it shows the full menu tree regardless of any current
+    customization — useful for finding the UNO IDs of individual items to hide in
+    a template's "menus" section.
+    """
+    default = _module_ui_config(ctx).getDefaultSettings(MENUBAR_RESOURCE)
+    return _walk_items(default, [], [])
+
+
 def menu_visibility(ctx):
     """Snapshot the current visibility of every top-level Writer menu.
 
@@ -78,52 +107,64 @@ def menu_visibility(ctx):
     return snapshot
 
 
-def apply_menu_profile(ctx, menus):
-    """Apply a menu visibility profile to Writer's top-level menu bar.
+def _prune_hidden(container, menus, hidden):
+    """Recursively remove entries whose command is marked False, at any depth.
 
-    ``menus`` maps UNO command IDs to booleans (True = visible, False = hidden),
-    as produced by a .louim template. Top-level menus marked False are removed
-    from the menu bar; everything else is kept. Commands not mentioned in the
-    profile default to visible.
-
-    The new menu bar is always derived from LibreOffice's factory-default menu
-    bar, so applying is idempotent and never cumulative: applying level-1 then
-    level-2 yields exactly level-2, not the intersection of both.
-
-    Returns the list of command IDs that were hidden. The change is persisted
-    to the user's LibreOffice profile and affects all Writer documents until
-    restored with ``restore_default_menus``.
+    Walks ``container`` depth-first: recurses into the submenu of every entry
+    that survives, then removes the hidden entries at this level (in descending
+    index order, so earlier removals do not shift the indices still to remove).
+    A hidden parent is removed whole — its children are not visited or listed.
     """
-    ui_cfg = _module_ui_config(ctx)
-    default = ui_cfg.getDefaultSettings(MENUBAR_RESOURCE)
-
-    kept = ui_cfg.createSettings()
-    hidden = []
-    next_index = 0
-    for i in range(default.getCount()):
-        entry = default.getByIndex(i)
-        command = _props_to_dict(entry).get("CommandURL")
+    to_remove = []
+    for i in range(container.getCount()):
+        entry = _props_to_dict(container.getByIndex(i))
+        command = entry.get("CommandURL")
         if command is not None and menus.get(command, True) is False:
+            to_remove.append(i)
             hidden.append(command)
             continue
-        # insertByIndex needs the entry as an explicitly typed Any; passing a
-        # bare tuple loses the Sequence<PropertyValue> type. A typed Any can
-        # only be handed to a UNO method via uno.invoke.
-        uno.invoke(kept, "insertByIndex",
-                   (next_index, uno.Any(_MENU_ENTRY_TYPE, entry)))
-        next_index += 1
+        sub = entry.get("ItemDescriptorContainer")
+        if sub is not None:
+            _prune_hidden(sub, menus, hidden)
+    for i in reversed(to_remove):
+        container.removeByIndex(i)
+
+
+def apply_menu_profile(ctx, menus):
+    """Apply a menu visibility profile to Writer's menus.
+
+    ``menus`` maps UNO command IDs to booleans (True = visible, False = hidden),
+    as produced by a .louim template. Any command marked False is removed —
+    whether it is a top-level menu (``.uno:InsertMenu``) or an individual item
+    inside a menu or submenu (``.uno:InsertPagebreak``). Commands not mentioned
+    default to visible. Hiding a menu also removes everything inside it.
+
+    The menu bar is always rebuilt from LibreOffice's factory default, so
+    applying is non-cumulative: applying level-1 then level-2 yields exactly
+    level-2. Returns the list of command IDs that were hidden. The change
+    persists in the user's profile until ``restore_default_menus``.
+    """
+    ui_cfg = _module_ui_config(ctx)
+
+    # Non-cumulative: drop any prior customization so we start from the factory
+    # default. getSettings(..., True) then yields a writable clone of the full
+    # default tree (whereas it would return only the customization layer if one
+    # were left in place).
+    if ui_cfg.hasSettings(MENUBAR_RESOURCE):
+        ui_cfg.removeSettings(MENUBAR_RESOURCE)
+        ui_cfg.store()
+
+    # Fast path: nothing to hide — leave the factory default menu bar in place.
+    if not any(visible is False for visible in menus.values()):
+        return []
+
+    writable = ui_cfg.getSettings(MENUBAR_RESOURCE, True)
+    hidden = []
+    _prune_hidden(writable, menus, hidden)
 
     if hidden:
-        if ui_cfg.hasSettings(MENUBAR_RESOURCE):
-            ui_cfg.replaceSettings(MENUBAR_RESOURCE, kept)
-        else:
-            ui_cfg.insertSettings(MENUBAR_RESOURCE, kept)
-    else:
-        # Nothing to hide: drop any customization and fall back to the default.
-        restore_default_menus(ctx, _ui_cfg=ui_cfg)
-        return hidden
-
-    ui_cfg.store()
+        ui_cfg.replaceSettings(MENUBAR_RESOURCE, writable)
+        ui_cfg.store()
     return hidden
 
 
