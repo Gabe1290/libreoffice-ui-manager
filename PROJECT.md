@@ -58,12 +58,11 @@ outside the package.
 
 1. GUI-verify the new menu entries (install `dist/louim.oxt` via Extension
    Manager, restart): "Apply Template..." picks a `.louim` and the menu bar
-   simplifies; "Restore Full Menus" brings all menus back.
+   simplifies; "Restore Full Menus" brings all menus back. The picker should
+   now open in the bundled `templates/` folder (writer-full / writer-level-1 /
+   writer-level-2) by default.
 2. Extend discovery/apply beyond the top-level menu bar (submenu items,
    toolbars, sidebar) per the architecture.
-3. Ship the bundled starter templates from inside the package (default the
-   file picker to the deployed `templates/` folder) so teachers see
-   writer-level-1/2 without hunting for a file.
 
 ## Done — Apply Engine wired into the extension UI
 
@@ -82,6 +81,11 @@ dev tool needed):
 Built and packaged clean (`python tools/build.py` → `dist/louim.oxt` contains
 the entry points and the three starter templates); loader tests still pass.
 Not yet GUI-verified (no display in this environment) — see task 1.
+
+The file picker now defaults to the deployed `templates/` folder, located via
+the `PackageInformationProvider` (refactored into `_package_url`, shared with
+`_ensure_package_path`). Best-effort: falls back to the picker's last location
+if the folder can't be resolved.
 
 ## Engine Status (verified headlessly)
 

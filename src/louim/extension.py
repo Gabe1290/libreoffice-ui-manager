@@ -18,23 +18,36 @@ import uno
 _EXTENSION_ID = "org.louim.libreoffice-ui-manager"
 
 
-def _ensure_package_path(ctx):
-    """Make the bundled ``louim`` package importable from inside the extension.
+def _package_url(ctx):
+    """Return the deployed extension's location as a file URL, or None.
 
-    The script provider does not put the package root on ``sys.path``, and it
-    does not give this module a usable filesystem ``__file__`` (it is often a
-    UNO/file URL). The reliable way to find the deployed extension is the
-    deployment ``PackageInformationProvider``; the bundled Python lives in its
-    ``python/`` subfolder (mirroring the .oxt layout), so adding that makes
-    ``import louim.*`` resolve exactly as it does for the dev tools and tests.
+    The deployment ``PackageInformationProvider`` is the reliable way to find
+    where this .oxt was installed (the script provider gives this module no
+    usable filesystem ``__file__``). Both the bundled Python package and the
+    starter ``templates/`` folder live under this location, mirroring the .oxt
+    layout.
     """
     try:
         pip = ctx.getValueByName(
             "/singletons/com.sun.star.deployment.PackageInformationProvider"
         )
-        url = pip.getPackageLocation(_EXTENSION_ID)
-        if not url:
-            return
+        return pip.getPackageLocation(_EXTENSION_ID) or None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _ensure_package_path(ctx):
+    """Make the bundled ``louim`` package importable from inside the extension.
+
+    The script provider does not put the package root on ``sys.path``. The
+    bundled Python lives in the deployed package's ``python/`` subfolder
+    (mirroring the .oxt layout), so adding that makes ``import louim.*`` resolve
+    exactly as it does for the dev tools and tests.
+    """
+    url = _package_url(ctx)
+    if not url:
+        return
+    try:
         python_dir = os.path.join(uno.fileUrlToSystemPath(url), "python")
         if python_dir not in sys.path:
             sys.path.insert(0, python_dir)
@@ -67,6 +80,18 @@ def _pick_template(ctx):
     picker.setTitle("Choose a LOUIM template")
     picker.appendFilter("LOUIM templates (*.louim)", "*.louim")
     picker.appendFilter("All files (*.*)", "*.*")
+
+    # Default to the starter templates bundled inside the deployed extension so
+    # teachers land on writer-level-1/2 without hunting for a file. Best-effort:
+    # if the folder can't be located the picker just opens at its last location.
+    url = _package_url(ctx)
+    if url:
+        templates_url = url.rstrip("/") + "/templates"
+        try:
+            if os.path.isdir(uno.fileUrlToSystemPath(templates_url)):
+                picker.setDisplayDirectory(templates_url)
+        except Exception:  # noqa: BLE001
+            pass
 
     if picker.execute() != OK:
         return None
