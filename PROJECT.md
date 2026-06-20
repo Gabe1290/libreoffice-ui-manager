@@ -88,8 +88,20 @@ Wired into `extension.py` (apply_template / restore_menus) and both dev tools
 (`discover-menus.py`, `apply-template.py`). Template `toolbars` section is now
 validated by the loader and documented in `docs/template-format.md`. Tests:
 10 pass (added toolbar-section validation). Build packages the adapter into
-`dist/louim.oxt`. **Not yet GUI-verified** — see task 1 (need real resource URLs
-from a running Writer; the mechanism is untested against a live instance).
+`dist/louim.oxt`.
+
+**Live-verified** against a running Writer (`tools/verify-toolbars.py`): hiding
+`standardbar`/`colorbar` flips the persisted `Visible` flag and restore
+reproduces the exact original state for both. Caveat: both test toolbars already
+had a window-state entry, so only the *update* path is live-verified; the
+*create-then-remove* path (no prior entry) is covered in code but not yet
+exercised against a live instance.
+
+Real Writer toolbar resource URLs confirmed via discovery (labels come back
+empty when discovering without an open document frame — a display-only gap, IDs
+are correct). Common ones for profiles: `standardbar` (Standard),
+`textobjectbar` (Formatting), `findbar` (Find), `tableobjectbar` (Table),
+`insertbar` (Insert), `drawbar` (Drawing).
 
 ## Done — Apply Engine wired into the extension UI
 

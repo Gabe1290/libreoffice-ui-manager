@@ -77,14 +77,14 @@ class LoadTemplateTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             # Valid toolbars section.
             path = _write(d, {"application": "writer", "menus": {},
-                              "toolbars": {"private:resource/toolbar/tablebar": False}})
+                              "toolbars": {"private:resource/toolbar/tableobjectbar": False}})
             loaded = load_template(path)
             self.assertEqual(
-                loaded["toolbars"]["private:resource/toolbar/tablebar"], False
+                loaded["toolbars"]["private:resource/toolbar/tableobjectbar"], False
             )
             # Non-boolean toolbar value is rejected.
             bad = _write(d, {"application": "writer", "menus": {},
-                             "toolbars": {"private:resource/toolbar/tablebar": "no"}})
+                             "toolbars": {"private:resource/toolbar/tableobjectbar": "no"}})
             with self.assertRaises(TemplateError):
                 load_template(bad)
             # A non-object toolbars section is rejected.

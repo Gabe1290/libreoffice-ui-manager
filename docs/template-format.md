@@ -80,7 +80,7 @@ toolbar's **resource URL** to a boolean (`true` = visible, `false` = hidden):
 ```json
 "toolbars": {
   "private:resource/toolbar/standardbar": true,
-  "private:resource/toolbar/tablebar": false
+  "private:resource/toolbar/tableobjectbar": false
 }
 ```
 
