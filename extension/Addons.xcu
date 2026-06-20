@@ -23,6 +23,33 @@
                 <node oor:name="Submenu">
                     <node oor:name="m1" oor:op="replace">
                         <prop oor:name="Title" oor:type="xs:string">
+                            <value>Apply Template...</value>
+                        </prop>
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:louim.oxt/python/louim/extension.py$apply_template?language=Python&amp;location=user:uno_packages</value>
+                        </prop>
+                        <prop oor:name="Target" oor:type="xs:string">
+                            <value>_self</value>
+                        </prop>
+                    </node>
+                    <node oor:name="m2" oor:op="replace">
+                        <prop oor:name="Title" oor:type="xs:string">
+                            <value>Restore Full Menus</value>
+                        </prop>
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>vnd.sun.star.script:louim.oxt/python/louim/extension.py$restore_menus?language=Python&amp;location=user:uno_packages</value>
+                        </prop>
+                        <prop oor:name="Target" oor:type="xs:string">
+                            <value>_self</value>
+                        </prop>
+                    </node>
+                    <node oor:name="m3" oor:op="replace">
+                        <prop oor:name="URL" oor:type="xs:string">
+                            <value>private:separator</value>
+                        </prop>
+                    </node>
+                    <node oor:name="m4" oor:op="replace">
+                        <prop oor:name="Title" oor:type="xs:string">
                             <value>Hello LOUIM</value>
                         </prop>
                         <prop oor:name="URL" oor:type="xs:string">

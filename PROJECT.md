@@ -56,12 +56,32 @@ outside the package.
 
 ## Next Session Tasks
 
-1. Confirm the Tools-menu "Hello LOUIM" entry works in the GUI (install
-   `dist/louim.oxt` via Extension Manager, restart, click the menu item).
-2. Wire the Apply Engine into the extension UI (a menu entry that loads a
-   `.louim` file and applies it, plus a "Restore full menus" entry).
-3. Extend discovery/apply beyond the top-level menu bar (submenu items,
+1. GUI-verify the new menu entries (install `dist/louim.oxt` via Extension
+   Manager, restart): "Apply Template..." picks a `.louim` and the menu bar
+   simplifies; "Restore Full Menus" brings all menus back.
+2. Extend discovery/apply beyond the top-level menu bar (submenu items,
    toolbars, sidebar) per the architecture.
+3. Ship the bundled starter templates from inside the package (default the
+   file picker to the deployed `templates/` folder) so teachers see
+   writer-level-1/2 without hunting for a file.
+
+## Done — Apply Engine wired into the extension UI
+
+The "LibreOffice UI Manager" menu now drives the engine directly (no socket /
+dev tool needed):
+
+- `apply_template` (`src/louim/extension.py`) — opens a file picker for a
+  `.louim`, loads+validates it via the Template Manager, then calls
+  `apply_menu_profile` + `apply_addon_profile`. Reports what was hidden.
+- `restore_menus` — calls `restore_default_menus` + `restore_addon_menus`.
+- Menu entries added to `extension/Addons.xcu`: "Apply Template...",
+  "Restore Full Menus", a separator, and the existing "Hello LOUIM".
+- `extension.py` adds `python/` to `sys.path` so the bundled `louim` package
+  imports the same way it does for the dev tools / tests.
+
+Built and packaged clean (`python tools/build.py` → `dist/louim.oxt` contains
+the entry points and the three starter templates); loader tests still pass.
+Not yet GUI-verified (no display in this environment) — see task 1.
 
 ## Engine Status (verified headlessly)
 

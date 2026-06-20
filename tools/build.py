@@ -25,10 +25,20 @@ def clean():
     BUILD.mkdir(parents=True)
 
 
+# Never package compiled bytecode. LibreOffice bundles its own Python whose
+# version usually differs from the build machine's, and the manifest registers
+# python/ as a framework-script provider — stale .pyc files there can break the
+# extension's startup synchronization (observed as a soffice restart loop when
+# installing by double-clicking the .oxt). Source .py only.
+_IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", "*.pyo")
+
+
 def copy_files():
-    shutil.copytree(EXTENSION, BUILD, dirs_exist_ok=True)
-    shutil.copytree(SRC / "louim", BUILD / "python" / "louim", dirs_exist_ok=True)
-    shutil.copytree(TEMPLATES, BUILD / "templates", dirs_exist_ok=True)
+    shutil.copytree(EXTENSION, BUILD, dirs_exist_ok=True, ignore=_IGNORE)
+    shutil.copytree(SRC / "louim", BUILD / "python" / "louim",
+                    dirs_exist_ok=True, ignore=_IGNORE)
+    shutil.copytree(TEMPLATES, BUILD / "templates", dirs_exist_ok=True,
+                    ignore=_IGNORE)
 
 
 def make_oxt():
