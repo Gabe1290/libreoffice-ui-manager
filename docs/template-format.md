@@ -87,11 +87,17 @@ toolbar's **resource URL** to a boolean (`true` = visible, `false` = hidden):
 Resource URLs all start with `private:resource/toolbar/` and are
 language-independent. Toolbars not listed keep their current visibility.
 
-Hiding sets the toolbar's persistent `Visible` state to off in Writer's
-window-state configuration, so the change survives a restart and applies to
-newly opened Writer windows. "Restore Full Menus" returns every toolbar LOUIM
-hid to exactly the state it had before (including removing a window-state entry
-LOUIM had to create).
+`false` hides the toolbar by setting its persistent `Visible` state to off in
+Writer's window-state configuration, so the change survives a restart and
+applies to newly opened Writer windows. `true` un-hides a toolbar that an
+earlier LOUIM template hid; it never *forces* a toolbar on, so contextual bars
+(Table, Drawing) keep their normal show-in-context behaviour. To bring a hidden
+toolbar back when moving to a lighter profile, list it as `true` in the new
+template — that is why the bundled levels share the same toolbar keys with
+different values.
+
+"Restore Full Menus" returns every toolbar LOUIM hid to exactly the state it
+had before (including removing a window-state entry LOUIM had to create).
 
 Run `tools/discover-menus.py` to list the exact toolbar resource URLs and their
 display names for your LibreOffice version.

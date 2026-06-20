@@ -159,9 +159,11 @@ def _restore_one(provider, resource, record):
 def apply_toolbar_profile(ctx, toolbars, path=None):
     """Hide/show whole toolbars in Writer per a "toolbars" profile.
 
-    ``toolbars`` maps toolbar resource URLs to booleans (True = visible,
-    False = hidden). Resources not mentioned are left untouched. Returns the
-    list of resource URLs that were hidden.
+    ``toolbars`` maps toolbar resource URLs to booleans. ``False`` hides the
+    toolbar; ``True`` un-hides one LOUIM previously hid (and is otherwise a
+    no-op — it never *forces* a toolbar on, so contextual bars keep their normal
+    behaviour). Resources not mentioned are left untouched. Returns the list of
+    resource URLs that were hidden.
 
     The pre-LOUIM Visible state of each affected toolbar is saved to the state
     file before the first change, so ``restore_toolbars`` can reproduce it
@@ -183,11 +185,13 @@ def apply_toolbar_profile(ctx, toolbars, path=None):
                     state[resource] = record  # remember the original
                 hidden.append(resource)
             else:
-                # Explicitly visible: undo our change if we had hidden it.
+                # Explicitly visible: undo our hide if we made one, but never
+                # *force* a toolbar on. Forcing Visible=true would pin a
+                # contextual toolbar (Table, Drawing) open outside its context;
+                # for toolbars LOUIM never hid, LibreOffice's own default and
+                # context handling must stand. (Same rule as addons.py.)
                 if resource in state:
                     _restore_one(provider, resource, state.pop(resource))
-                else:
-                    _set_visible(provider, resource, True)
         except Exception:  # noqa: BLE001 — unknown/locked resource, skip it
             continue
 

@@ -56,16 +56,17 @@ outside the package.
 
 ## Next Session Tasks
 
-1. GUI-verify toolbar hide/restore: run `tools/discover-menus.py` against a
-   running Writer to get the real toolbar resource URLs, add a couple to a
-   template's `toolbars` section (e.g. `private:resource/toolbar/tablebar`:
-   false), Apply Template..., and confirm those toolbars disappear for newly
-   opened Writer windows and come back with "Restore Full Menus".
-2. Populate the bundled level-1/level-2 templates with sensible `toolbars`
-   entries once the real resource URLs are confirmed (kept empty for now to
-   avoid shipping unverified IDs).
-3. Extend discovery/apply to submenu items (individual entries inside a menu)
+1. GUI-verify the populated templates in a real Writer window: install the
+   freshly built `dist/louim.oxt`, Apply "Getting Started" and confirm the
+   Find/Insert/Table/Drawing toolbars stay hidden (open a table to check the
+   Table toolbar does not pop in), then Apply "Basic Editing" / "Complete
+   Writer" and confirm they return. The config-level behaviour is already
+   verified headlessly (see below); this is the on-screen confirmation.
+2. Extend discovery/apply to submenu items (individual entries inside a menu)
    and the sidebar per the architecture.
+3. Discovery returns empty labels when run without an open document frame —
+   make discovery resolve display names (open/locate a Writer frame) so the
+   teacher-facing UI can show real toolbar/menu names.
 
 ## Done — Toolbar hide/restore (Apply Engine v2)
 
@@ -102,6 +103,24 @@ empty when discovering without an open document frame — a display-only gap, ID
 are correct). Common ones for profiles: `standardbar` (Standard),
 `textobjectbar` (Formatting), `findbar` (Find), `tableobjectbar` (Table),
 `insertbar` (Insert), `drawbar` (Drawing).
+
+### Starter templates now carry toolbar entries
+
+All three bundled templates share the same six toolbar keys with level-appropriate
+values: level-1 hides Find/Insert/Table/Drawing (keeps Standard + Formatting),
+level-2 re-shows Insert/Table/Find (still hides Drawing), writer-full shows all.
+Sharing the key set means moving to a lighter profile un-hides what a heavier one
+hid, since toolbar applies are cumulative through the state file (unlike menus,
+which rebuild from the factory default each apply).
+
+Semantics fix this required: a `true` toolbar entry now only *un-hides* a toolbar
+LOUIM previously hid — it no longer forces `Visible=true`, which would have pinned
+a contextual bar (Table, Drawing) open outside its context. This matches addons.py.
+
+Live end-to-end verified against a running Writer: applying level-1 then
+writer-full returns every toolbar to its exact original state (net-zero), and a
+toolbar that was hidden *before* LOUIM ran stays hidden through a `true` entry
+(no force-show).
 
 ## Done — Apply Engine wired into the extension UI
 
