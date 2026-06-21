@@ -111,3 +111,9 @@ throwaway headless instance per the safety rules, not the user's session:
   path back to the user's original interface.
 - Build excludes bytecode (`__pycache__`, `*.pyc`) from the `.oxt`; stale `.pyc`
   in the bundled `python/` folder can break extension startup.
+- LOUIM's UI is localized (en/fr/de/it). Any **new user-facing string** must be
+  added to `src/louim/i18n.py` (all four languages, same `%`-placeholders) and
+  fetched via the translator — never hard-code English in `extension.py`. New
+  **menu items** in `extension/Addons.xcu` need `xml:lang` Titles for the four
+  languages. Templates stay language-independent (UNO IDs only), so they need no
+  translation.

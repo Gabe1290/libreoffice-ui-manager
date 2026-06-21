@@ -70,6 +70,29 @@ outside the package.
 3. Decide whether the in-app export should also capture **nested menu items**
    (currently top-level menus only; full-tree capture would be large/verbose).
 
+## Done — Localization: English, French, German, Italian
+
+LOUIM's own UI is now translated. The engine was already language-independent
+(it keys on UNO command IDs / resource URLs, never localized labels), so only
+LOUIM's own surfaces needed work:
+
+- `src/louim/i18n.py` — string tables for en/fr/de/it, a pure `translator(lang)`
+  (English fallback for missing key/language), `normalize_lang` ("fr-FR" → "fr",
+  unsupported → "en"), and `office_language(ctx)` reading `ooLocale` from the
+  Office L10N config (lazy `uno` import).
+- `extension.py` — every dialog title, message-box body, and file-picker
+  string now comes from the translator, chosen by the live Office language.
+- `extension/Addons.xcu` — each menu item Title carries `xml:lang` values for
+  en-US/fr/de/it (Apply Template, Save Current Layout, Restore Full Menus,
+  Hello). The top menu name stays the "LibreOffice UI Manager" brand.
+- Tests: 48 pass (10 new) — key/lang parity, **placeholder-count parity** across
+  languages (so `%` formatting can't fail), fallback behaviour, locale
+  normalization. Verified the fr/de/it strings render with correct accents and
+  quotes.
+
+Not localized (deliberate, low value): the Extension Manager `description.xml`
+display name (a brand) and the `description.txt` blurb.
+
 ## Done (pending GUI verification) — Discovery labels + leaner export
 
 - **Menu labels** now resolve via the `UICommandDescription` service

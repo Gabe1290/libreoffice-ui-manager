@@ -23,7 +23,10 @@
                 <node oor:name="Submenu">
                     <node oor:name="m1" oor:op="replace">
                         <prop oor:name="Title" oor:type="xs:string">
-                            <value>Apply Template...</value>
+                            <value xml:lang="en-US">Apply Template...</value>
+                            <value xml:lang="fr">Appliquer un modèle...</value>
+                            <value xml:lang="de">Vorlage anwenden...</value>
+                            <value xml:lang="it">Applica modello...</value>
                         </prop>
                         <prop oor:name="URL" oor:type="xs:string">
                             <value>vnd.sun.star.script:louim.oxt/python/louim/extension.py$apply_template?language=Python&amp;location=user:uno_packages</value>
@@ -34,7 +37,10 @@
                     </node>
                     <node oor:name="m5" oor:op="replace">
                         <prop oor:name="Title" oor:type="xs:string">
-                            <value>Save Current Layout as Template...</value>
+                            <value xml:lang="en-US">Save Current Layout as Template...</value>
+                            <value xml:lang="fr">Enregistrer la disposition comme modèle...</value>
+                            <value xml:lang="de">Aktuelles Layout als Vorlage speichern...</value>
+                            <value xml:lang="it">Salva il layout come modello...</value>
                         </prop>
                         <prop oor:name="URL" oor:type="xs:string">
                             <value>vnd.sun.star.script:louim.oxt/python/louim/extension.py$export_template?language=Python&amp;location=user:uno_packages</value>
@@ -45,7 +51,10 @@
                     </node>
                     <node oor:name="m2" oor:op="replace">
                         <prop oor:name="Title" oor:type="xs:string">
-                            <value>Restore Full Menus</value>
+                            <value xml:lang="en-US">Restore Full Menus</value>
+                            <value xml:lang="fr">Restaurer tous les menus</value>
+                            <value xml:lang="de">Vollständige Menüs wiederherstellen</value>
+                            <value xml:lang="it">Ripristina tutti i menu</value>
                         </prop>
                         <prop oor:name="URL" oor:type="xs:string">
                             <value>vnd.sun.star.script:louim.oxt/python/louim/extension.py$restore_menus?language=Python&amp;location=user:uno_packages</value>
@@ -61,7 +70,10 @@
                     </node>
                     <node oor:name="m4" oor:op="replace">
                         <prop oor:name="Title" oor:type="xs:string">
-                            <value>Hello LOUIM</value>
+                            <value xml:lang="en-US">Hello LOUIM</value>
+                            <value xml:lang="fr">Bonjour LOUIM</value>
+                            <value xml:lang="de">Hallo LOUIM</value>
+                            <value xml:lang="it">Ciao LOUIM</value>
                         </prop>
                         <prop oor:name="URL" oor:type="xs:string">
                             <value>vnd.sun.star.script:louim.oxt/python/louim/extension.py$hello?language=Python&amp;location=user:uno_packages</value>
