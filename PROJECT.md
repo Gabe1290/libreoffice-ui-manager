@@ -61,14 +61,40 @@ outside the package.
    and Find/Insert are gone; "Save Current Layout as Template..." writes a
    .louim you can reopen; Apply it back. Then confirm "Complete Writer" / the
    Restore entry return the full interface.
-2. Extend apply to the **sidebar** (decks/panels) per the architecture — the
-   last UI surface after menus, submenu items, toolbars, and extension menus.
+2. **GUI-verify the sidebar** (see below): the engine + ContextList logic are
+   built and unit-tested, but apply/restore are not yet verified on a live
+   instance (deliberately, per the no-live-testing rule). Confirm in a real
+   Writer — or a throwaway headless instance — that a template hiding e.g.
+   `GalleryDeck` removes it from the sidebar deck list and Restore brings it
+   back, and that Calc/Draw still show it.
 3. Discovery returns empty labels when run without an open document frame —
    make discovery resolve display names (open/locate a Writer frame) so the
    teacher-facing UI and exported templates can show real names.
 4. Export currently snapshots only top-level menus + toolbars-with-state. Decide
    whether to also offer nested-item capture (would be large) and trim the ~58
    toolbar entries to a curated set so exported templates are easier to edit.
+
+## Done (pending GUI verification) — Sidebar deck hiding (Apply Engine v4)
+
+`src/louim/adapters/writer/sidebar.py` hides/shows whole sidebar decks
+(Properties, Styles, Gallery, Navigator, …), mirroring addons.py: a deck appears
+in Writer when its `ContextList` (under
+`org.openoffice.Office.UI.Sidebar/Content/DeckList/<deckId>`) has a Writer entry;
+LOUIM drops the Writer entries (saving the original to
+`louim-sidebar-state.json`) to hide it, and writes them back to restore. A
+template's new `sidebar` section maps deck Id → bool.
+
+- `discover_sidebar_decks` / `sidebar_visibility` read the live decks; wired into
+  the extension apply/restore, both dev tools, the exporter, the loader, and
+  `docs/template-format.md`.
+- The `ContextList` parse/edit logic (`shows_in_writer`, `strip_writer`, with an
+  "any" → non-Writer-apps fallback) is **pure Python** (sidebar.py imports `uno`
+  lazily), so it is unit-tested in CI: 33 tests pass (12 new).
+
+Design was derived **offline** by reading the installed deck definitions in
+`share/registry/main.xcd` (deck Ids + the `ContextList` format) — no live
+LibreOffice was touched, per the safety rules. **Not yet GUI-verified**; apply
+needs confirmation on a real/throwaway Writer (see task 2).
 
 ## Done — Submenu-item hiding (Apply Engine v3)
 

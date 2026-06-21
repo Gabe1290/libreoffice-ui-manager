@@ -36,6 +36,7 @@ def load_template(path):
     _validate_bool_map(data.get("menus", {}), "menus", "menu")
     _validate_bool_map(data.get("addons", {}), "addons", "addon")
     _validate_bool_map(data.get("toolbars", {}), "toolbars", "toolbar")
+    _validate_bool_map(data.get("sidebar", {}), "sidebar", "sidebar deck")
 
     return data
 

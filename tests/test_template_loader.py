@@ -98,6 +98,16 @@ class LoadTemplateTest(unittest.TestCase):
             template = load_template(str(ROOT / "templates" / (name + ".louim")))
             self.assertIsInstance(template["toolbars"], dict)
 
+    def test_sidebar_optional_and_validated(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = _write(d, {"application": "writer", "menus": {},
+                              "sidebar": {"GalleryDeck": False}})
+            self.assertEqual(load_template(path)["sidebar"]["GalleryDeck"], False)
+            bad = _write(d, {"application": "writer", "menus": {},
+                             "sidebar": {"GalleryDeck": "no"}})
+            with self.assertRaises(TemplateError):
+                load_template(bad)
+
 
 if __name__ == "__main__":
     unittest.main()

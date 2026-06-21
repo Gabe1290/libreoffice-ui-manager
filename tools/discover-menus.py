@@ -31,6 +31,7 @@ from louim.adapters.writer.menubar import (  # noqa: E402
 )
 from louim.adapters.writer.addons import discover_addon_menus  # noqa: E402
 from louim.adapters.writer.toolbars import discover_toolbars  # noqa: E402
+from louim.adapters.writer.sidebar import discover_sidebar_decks  # noqa: E402
 
 
 def connect(host, port):
@@ -78,6 +79,11 @@ def main():
     print("\nDiscovered %d Writer toolbar(s):" % len(toolbars))
     for toolbar in toolbars:
         print("  %-45s %s" % (toolbar["resource"], toolbar["label"]))
+
+    decks = discover_sidebar_decks(ctx)
+    print("\nDiscovered %d Writer sidebar deck(s):" % len(decks))
+    for deck in decks:
+        print("  %-24s %s" % (deck["deck"], deck["title"]))
 
     if args.tree:
         items = discover_menu_items(ctx)

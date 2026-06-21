@@ -149,6 +149,7 @@ def apply_template(*args):
         from louim.adapters.writer.menubar import apply_menu_profile
         from louim.adapters.writer.addons import apply_addon_profile
         from louim.adapters.writer.toolbars import apply_toolbar_profile
+        from louim.adapters.writer.sidebar import apply_sidebar_profile
 
         path = _pick_template(ctx)
         if not path:
@@ -163,14 +164,16 @@ def apply_template(*args):
         hidden = apply_menu_profile(ctx, template.get("menus", {}))
         hidden_addons = apply_addon_profile(ctx, template.get("addons", {}))
         hidden_toolbars = apply_toolbar_profile(ctx, template.get("toolbars", {}))
+        hidden_decks = apply_sidebar_profile(ctx, template.get("sidebar", {}))
         name = template.get("profile", {}).get("name") or os.path.basename(path)
         _message_box(
             ctx,
             "LibreOffice UI Manager",
-            'Applied "%s".\n\nHidden %d menu(s), %d extension menu(s), and '
-            "%d toolbar(s).\n"
+            'Applied "%s".\n\nHidden %d menu(s), %d extension menu(s), '
+            "%d toolbar(s), and %d sidebar deck(s).\n"
             "Reopen the document if the interface has not refreshed."
-            % (name, len(hidden), len(hidden_addons), len(hidden_toolbars)),
+            % (name, len(hidden), len(hidden_addons), len(hidden_toolbars),
+               len(hidden_decks)),
         )
     except Exception as exc:  # noqa: BLE001 — never let a macro crash silently
         _message_box(ctx, "LOUIM error", str(exc))
@@ -184,10 +187,12 @@ def restore_menus(*args):
         from louim.adapters.writer.menubar import restore_default_menus
         from louim.adapters.writer.addons import restore_addon_menus
         from louim.adapters.writer.toolbars import restore_toolbars
+        from louim.adapters.writer.sidebar import restore_sidebar_decks
 
         restore_default_menus(ctx)
         restore_addon_menus(ctx)
         restore_toolbars(ctx)
+        restore_sidebar_decks(ctx)
         _message_box(
             ctx,
             "LibreOffice UI Manager",

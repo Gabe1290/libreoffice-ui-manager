@@ -121,6 +121,31 @@ had before (including removing a window-state entry LOUIM had to create).
 Run `tools/discover-menus.py` to list the exact toolbar resource URLs and their
 display names for your LibreOffice version.
 
+## Sidebar
+
+The optional `sidebar` object hides or shows whole sidebar **decks** (Properties,
+Styles, Gallery, Navigator, …). It maps a deck's stable **Id** to a boolean
+(`true` = visible, `false` = hidden):
+
+```json
+"sidebar": {
+  "GalleryDeck": false,
+  "PropertyDeck": true
+}
+```
+
+Deck Ids are language-independent (e.g. `GalleryDeck`, `StyleListDeck`,
+`NavigatorDeck`, `PropertyDeck`). Decks not listed keep their current state.
+
+Hiding works like the `addons` section: LOUIM removes Writer from the deck's
+`ContextList` (saving the original first), so the deck stops appearing in
+Writer's sidebar but stays available in Calc/Draw/etc. "Restore Full Menus"
+returns every deck LOUIM hid to its original context. Changes take effect for
+newly opened Writer windows.
+
+Run `tools/discover-menus.py` to list the sidebar decks available in Writer and
+their Ids.
+
 ## Creating and editing your own templates
 
 A `.louim` file is plain JSON — copy one of the bundled templates (or export your

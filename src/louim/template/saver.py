@@ -14,12 +14,13 @@ import json
 TEMPLATE_VERSION = 1
 
 
-def assemble_template(name, description, menus, addons=None, toolbars=None):
+def assemble_template(name, description, menus, addons=None, toolbars=None,
+                      sidebar=None):
     """Build a template dict from a profile name and visibility maps.
 
-    ``menus`` / ``addons`` / ``toolbars`` map identifiers to booleans, as the
-    discovery snapshots produce. The result is the exact structure ``loader``
-    validates and the Apply Engine consumes.
+    ``menus`` / ``addons`` / ``toolbars`` / ``sidebar`` map identifiers to
+    booleans, as the discovery snapshots produce. The result is the exact
+    structure ``loader`` validates and the Apply Engine consumes.
     """
     return {
         "version": TEMPLATE_VERSION,
@@ -31,6 +32,7 @@ def assemble_template(name, description, menus, addons=None, toolbars=None):
         "menus": dict(menus or {}),
         "addons": dict(addons or {}),
         "toolbars": dict(toolbars or {}),
+        "sidebar": dict(sidebar or {}),
     }
 
 
@@ -54,6 +56,7 @@ def build_current_template(ctx, name, description=""):
     from louim.adapters.writer.menubar import menu_visibility
     from louim.adapters.writer.addons import addon_visibility
     from louim.adapters.writer.toolbars import toolbar_visibility
+    from louim.adapters.writer.sidebar import sidebar_visibility
 
     return assemble_template(
         name,
@@ -61,4 +64,5 @@ def build_current_template(ctx, name, description=""):
         menus=menu_visibility(ctx),
         addons=addon_visibility(ctx),
         toolbars=toolbar_visibility(ctx),
+        sidebar=sidebar_visibility(ctx),
     )
