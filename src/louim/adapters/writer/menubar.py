@@ -28,6 +28,41 @@ def _props_to_dict(props):
     return {p.Name: p.Value for p in props}
 
 
+def _command_labels(ctx):
+    """Return an XNameAccess mapping command URL -> label info for Writer.
+
+    The menu-bar UI config stores command IDs but usually leaves ``Label`` empty
+    (LibreOffice resolves the visible text from the command at display time, and
+    more so when no document frame is open). The ``UICommandDescription`` service
+    is the language-aware source of those labels. Returns None if unavailable, so
+    callers fall back to whatever ``Label`` the entry carried.
+    """
+    try:
+        desc = ctx.getServiceManager().createInstanceWithContext(
+            "com.sun.star.frame.UICommandDescription", ctx
+        )
+        return desc.getByName(WRITER_MODULE)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _label_for(command, entry_label, command_labels):
+    """Best display label for a command: its entry label, else the resolved one.
+
+    Mnemonic markers (``~``) are stripped for clean display. Labels are for
+    humans only and are never written into a template.
+    """
+    label = entry_label or ""
+    if not label and command_labels is not None and command:
+        try:
+            if command_labels.hasByName(command):
+                info = _props_to_dict(command_labels.getByName(command))
+                label = info.get("Label") or info.get("Name") or ""
+        except Exception:  # noqa: BLE001
+            label = ""
+    return label.replace("~", "")
+
+
 def discover_top_level_menus(ctx):
     """Discover Writer's top-level menus.
 
@@ -40,6 +75,7 @@ def discover_top_level_menus(ctx):
     """
     ui_cfg = _module_ui_config(ctx)
     menubar = ui_cfg.getSettings(MENUBAR_RESOURCE, False)
+    command_labels = _command_labels(ctx)
 
     menus = []
     for i in range(menubar.getCount()):
@@ -48,11 +84,14 @@ def discover_top_level_menus(ctx):
         if not command:
             # Separators and other non-command entries have no CommandURL.
             continue
-        menus.append({"command": command, "label": entry.get("Label", "")})
+        menus.append({
+            "command": command,
+            "label": _label_for(command, entry.get("Label", ""), command_labels),
+        })
     return menus
 
 
-def _walk_items(container, path, items):
+def _walk_items(container, path, items, command_labels):
     """Append every command entry under ``container`` (depth-first) to ``items``."""
     for i in range(container.getCount()):
         entry = _props_to_dict(container.getByIndex(i))
@@ -60,13 +99,14 @@ def _walk_items(container, path, items):
         if command:
             items.append({
                 "command": command,
-                "label": entry.get("Label", ""),
+                "label": _label_for(command, entry.get("Label", ""), command_labels),
                 "path": list(path),
                 "depth": len(path),
             })
         sub = entry.get("ItemDescriptorContainer")
         if sub is not None:
-            _walk_items(sub, path + [command] if command else list(path), items)
+            _walk_items(sub, path + [command] if command else list(path), items,
+                        command_labels)
     return items
 
 
@@ -84,7 +124,7 @@ def discover_menu_items(ctx):
     a template's "menus" section.
     """
     default = _module_ui_config(ctx).getDefaultSettings(MENUBAR_RESOURCE)
-    return _walk_items(default, [], [])
+    return _walk_items(default, [], [], _command_labels(ctx))
 
 
 def menu_visibility(ctx):

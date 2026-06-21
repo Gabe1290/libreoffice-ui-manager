@@ -19,7 +19,9 @@
 import json
 import os
 
-import uno
+# ``uno`` is imported lazily inside the few helpers that need it, so this module
+# (and its pure helpers like ``curate_toolbars``) imports without LibreOffice and
+# is unit-tested in CI.
 
 # The window-state set for Writer toolbars.
 WINDOWSTATE_NODE = "/org.openoffice.Office.UI.WriterWindowState/UIElements/States"
@@ -30,6 +32,39 @@ TOOLBAR_PREFIX = "private:resource/toolbar/"
 
 STATE_FILENAME = "louim-toolbar-state.json"
 
+# The common, teacher-relevant Writer toolbars. A profile snapshot would
+# otherwise list every toolbar that has a window-state entry (~58), most of them
+# contextual noise; exporting only these (plus anything explicitly hidden) keeps
+# a saved template readable. All are real Writer toolbar resource URLs.
+CURATED_TOOLBARS = (
+    TOOLBAR_PREFIX + "standardbar",
+    TOOLBAR_PREFIX + "textobjectbar",
+    TOOLBAR_PREFIX + "findbar",
+    TOOLBAR_PREFIX + "insertbar",
+    TOOLBAR_PREFIX + "drawbar",
+    TOOLBAR_PREFIX + "tableobjectbar",
+    TOOLBAR_PREFIX + "frameobjectbar",
+    TOOLBAR_PREFIX + "graphicobjectbar",
+    TOOLBAR_PREFIX + "formcontrols",
+    TOOLBAR_PREFIX + "mailmerge",
+)
+
+
+def curate_toolbars(snapshot):
+    """Trim a toolbar visibility map for a readable exported template.
+
+    Keeps the common, teacher-relevant toolbars (``CURATED_TOOLBARS``) plus any
+    toolbar the snapshot marks hidden (``False``) — an explicit hide is an
+    intentional choice worth preserving even if the toolbar is not in the curated
+    set. Everything else (the dozens of contextual toolbars that merely happen to
+    have a window-state entry) is dropped. Pure function, unit-tested.
+    """
+    return {
+        resource: visible
+        for resource, visible in snapshot.items()
+        if resource in CURATED_TOOLBARS or visible is False
+    }
+
 
 def _config_provider(ctx):
     return ctx.getServiceManager().createInstanceWithContext(
@@ -38,6 +73,7 @@ def _config_provider(ctx):
 
 
 def _make_nodepath_arg(node):
+    import uno
     arg = uno.createUnoStruct("com.sun.star.beans.PropertyValue")
     arg.Name = "nodepath"
     arg.Value = node
@@ -75,6 +111,7 @@ def state_path(ctx):
     ps = ctx.getServiceManager().createInstanceWithContext(
         "com.sun.star.util.PathSubstitution", ctx
     )
+    import uno
     user_dir = uno.fileUrlToSystemPath(ps.getSubstituteVariableValue("$(user)"))
     return os.path.join(user_dir, STATE_FILENAME)
 

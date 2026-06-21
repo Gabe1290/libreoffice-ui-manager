@@ -67,12 +67,22 @@ outside the package.
    Writer — or a throwaway headless instance — that a template hiding e.g.
    `GalleryDeck` removes it from the sidebar deck list and Restore brings it
    back, and that Calc/Draw still show it.
-3. Discovery returns empty labels when run without an open document frame —
-   make discovery resolve display names (open/locate a Writer frame) so the
-   teacher-facing UI and exported templates can show real names.
-4. Export currently snapshots only top-level menus + toolbars-with-state. Decide
-   whether to also offer nested-item capture (would be large) and trim the ~58
-   toolbar entries to a curated set so exported templates are easier to edit.
+3. Decide whether the in-app export should also capture **nested menu items**
+   (currently top-level menus only; full-tree capture would be large/verbose).
+
+## Done (pending GUI verification) — Discovery labels + leaner export
+
+- **Menu labels** now resolve via the `UICommandDescription` service
+  (`menubar.py` `_command_labels` / `_label_for`), so `discover-menus.py` shows
+  real names even with no document frame open (the menu-bar config leaves
+  `Label` empty). Labels are display-only — never written to a template — so this
+  is low-risk; confirm cosmetically with `discover-menus.py [--tree]`.
+- **Leaner export**: `curate_toolbars` (in `toolbars.py`) trims the exported
+  `toolbars` map to the common Writer toolbars plus anything explicitly hidden,
+  instead of all ~58 window-state toolbars, so saved templates stay readable.
+  Pure function, unit-tested.
+- Refactored `toolbars.py` to import `uno` lazily (like `menubar.py`/`sidebar.py`)
+  so `curate_toolbars` is testable offline. Suite: 38 tests pass (5 new).
 
 ## Done (pending GUI verification) — Sidebar deck hiding (Apply Engine v4)
 

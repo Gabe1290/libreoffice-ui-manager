@@ -156,6 +156,9 @@ localized label in the file).
 
 To start from what you already have, use **LibreOffice UI Manager > Save Current
 Layout as Template...**. LOUIM snapshots the current visibility of the top-level
-menus, extension menus, and toolbars into a new `.louim` file, which you can then
-trim and rename. The command-line equivalent is `tools/export-template.py`
+menus, extension menus, toolbars, and sidebar decks into a new `.louim` file,
+which you can then trim and rename. To keep the file readable, the toolbar
+snapshot is limited to the common Writer toolbars (plus any you have explicitly
+hidden) rather than every internal toolbar; add other toolbar resource URLs by
+hand if you need them. The command-line equivalent is `tools/export-template.py`
 (run against a Writer started with a UNO socket).

@@ -55,7 +55,7 @@ def build_current_template(ctx, name, description=""):
     """
     from louim.adapters.writer.menubar import menu_visibility
     from louim.adapters.writer.addons import addon_visibility
-    from louim.adapters.writer.toolbars import toolbar_visibility
+    from louim.adapters.writer.toolbars import toolbar_visibility, curate_toolbars
     from louim.adapters.writer.sidebar import sidebar_visibility
 
     return assemble_template(
@@ -63,6 +63,6 @@ def build_current_template(ctx, name, description=""):
         description,
         menus=menu_visibility(ctx),
         addons=addon_visibility(ctx),
-        toolbars=toolbar_visibility(ctx),
+        toolbars=curate_toolbars(toolbar_visibility(ctx)),
         sidebar=sidebar_visibility(ctx),
     )
