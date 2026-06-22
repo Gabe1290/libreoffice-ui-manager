@@ -6,62 +6,83 @@
     oor:package="org.openoffice.Office">
 
     <node oor:name="AddonUI">
-        <node oor:name="OfficeMenuBar">
+        <!-- Place the menu explicitly AFTER the Help menu (rightmost top-level
+             menu), with a separator before it, using the menu-bar merge
+             mechanism. (The default OfficeMenuBar placement drops the menu among
+             the built-in menus instead.) -->
+        <node oor:name="OfficeMenuBarMerging">
             <node oor:name="org.louim.libreoffice-ui-manager.menu" oor:op="replace">
-                <prop oor:name="Title" oor:type="xs:string">
-                    <value>LibreOffice UI Manager</value>
-                </prop>
-                <!-- Without a Context, this top-level menu does not render in
-                     recent LibreOffice versions. Bind it to every application
-                     LOUIM supports so the menu appears there. -->
-                <prop oor:name="Context" oor:type="xs:string">
-                    <value>com.sun.star.text.TextDocument,com.sun.star.text.GlobalDocument,com.sun.star.sheet.SpreadsheetDocument,com.sun.star.presentation.PresentationDocument,com.sun.star.drawing.DrawingDocument</value>
-                </prop>
-                <prop oor:name="Target" oor:type="xs:string">
-                    <value>_self</value>
-                </prop>
-                <node oor:name="Submenu">
-                    <node oor:name="m1" oor:op="replace">
-                        <prop oor:name="Title" oor:type="xs:string">
-                            <value xml:lang="en-US">Apply Template...</value>
-                            <value xml:lang="fr">Appliquer un modèle...</value>
-                            <value xml:lang="de">Vorlage anwenden...</value>
-                            <value xml:lang="it">Applica modello...</value>
-                        </prop>
-                        <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:louim.oxt/python/louim/extension.py$apply_template?language=Python&amp;location=user:uno_packages</value>
-                        </prop>
-                        <prop oor:name="Target" oor:type="xs:string">
-                            <value>_self</value>
-                        </prop>
-                    </node>
-                    <node oor:name="m5" oor:op="replace">
-                        <prop oor:name="Title" oor:type="xs:string">
-                            <value xml:lang="en-US">Save Current Layout as Template...</value>
-                            <value xml:lang="fr">Enregistrer la disposition comme modèle...</value>
-                            <value xml:lang="de">Aktuelles Layout als Vorlage speichern...</value>
-                            <value xml:lang="it">Salva il layout come modello...</value>
-                        </prop>
-                        <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:louim.oxt/python/louim/extension.py$export_template?language=Python&amp;location=user:uno_packages</value>
-                        </prop>
-                        <prop oor:name="Target" oor:type="xs:string">
-                            <value>_self</value>
-                        </prop>
-                    </node>
-                    <node oor:name="m2" oor:op="replace">
-                        <prop oor:name="Title" oor:type="xs:string">
-                            <value xml:lang="en-US">Restore Full Menus</value>
-                            <value xml:lang="fr">Restaurer tous les menus</value>
-                            <value xml:lang="de">Vollständige Menüs wiederherstellen</value>
-                            <value xml:lang="it">Ripristina tutti i menu</value>
-                        </prop>
-                        <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:louim.oxt/python/louim/extension.py$restore_menus?language=Python&amp;location=user:uno_packages</value>
-                        </prop>
-                        <prop oor:name="Target" oor:type="xs:string">
-                            <value>_self</value>
-                        </prop>
+                <node oor:name="S1" oor:op="replace">
+                    <prop oor:name="MergePoint" oor:type="xs:string">
+                        <value>.uno:HelpMenu</value>
+                    </prop>
+                    <prop oor:name="MergeCommand" oor:type="xs:string">
+                        <value>AddAfter</value>
+                    </prop>
+                    <prop oor:name="MergeFallback" oor:type="xs:string">
+                        <value>AddPath</value>
+                    </prop>
+                    <prop oor:name="MergeContext" oor:type="xs:string">
+                        <value>com.sun.star.text.TextDocument,com.sun.star.text.GlobalDocument,com.sun.star.sheet.SpreadsheetDocument,com.sun.star.presentation.PresentationDocument,com.sun.star.drawing.DrawingDocument</value>
+                    </prop>
+                    <node oor:name="MenuItems">
+                        <node oor:name="louim_sep" oor:op="replace">
+                            <prop oor:name="URL" oor:type="xs:string">
+                                <value>private:separator</value>
+                            </prop>
+                        </node>
+                        <node oor:name="louim_menu" oor:op="replace">
+                            <prop oor:name="Title" oor:type="xs:string">
+                                <value>LibreOffice UI Manager</value>
+                            </prop>
+                            <prop oor:name="Context" oor:type="xs:string">
+                                <value>com.sun.star.text.TextDocument,com.sun.star.text.GlobalDocument,com.sun.star.sheet.SpreadsheetDocument,com.sun.star.presentation.PresentationDocument,com.sun.star.drawing.DrawingDocument</value>
+                            </prop>
+                            <node oor:name="Submenu">
+                                <node oor:name="m1" oor:op="replace">
+                                    <prop oor:name="Title" oor:type="xs:string">
+                                        <value xml:lang="en-US">Apply Template...</value>
+                                        <value xml:lang="fr">Appliquer un modèle...</value>
+                                        <value xml:lang="de">Vorlage anwenden...</value>
+                                        <value xml:lang="it">Applica modello...</value>
+                                    </prop>
+                                    <prop oor:name="URL" oor:type="xs:string">
+                                        <value>vnd.sun.star.script:louim.oxt/python/louim/extension.py$apply_template?language=Python&amp;location=user:uno_packages</value>
+                                    </prop>
+                                    <prop oor:name="Target" oor:type="xs:string">
+                                        <value>_self</value>
+                                    </prop>
+                                </node>
+                                <node oor:name="m5" oor:op="replace">
+                                    <prop oor:name="Title" oor:type="xs:string">
+                                        <value xml:lang="en-US">Save Current Layout as Template...</value>
+                                        <value xml:lang="fr">Enregistrer la disposition comme modèle...</value>
+                                        <value xml:lang="de">Aktuelles Layout als Vorlage speichern...</value>
+                                        <value xml:lang="it">Salva il layout come modello...</value>
+                                    </prop>
+                                    <prop oor:name="URL" oor:type="xs:string">
+                                        <value>vnd.sun.star.script:louim.oxt/python/louim/extension.py$export_template?language=Python&amp;location=user:uno_packages</value>
+                                    </prop>
+                                    <prop oor:name="Target" oor:type="xs:string">
+                                        <value>_self</value>
+                                    </prop>
+                                </node>
+                                <node oor:name="m2" oor:op="replace">
+                                    <prop oor:name="Title" oor:type="xs:string">
+                                        <value xml:lang="en-US">Restore Full Menus</value>
+                                        <value xml:lang="fr">Restaurer tous les menus</value>
+                                        <value xml:lang="de">Vollständige Menüs wiederherstellen</value>
+                                        <value xml:lang="it">Ripristina tutti i menu</value>
+                                    </prop>
+                                    <prop oor:name="URL" oor:type="xs:string">
+                                        <value>vnd.sun.star.script:louim.oxt/python/louim/extension.py$restore_menus?language=Python&amp;location=user:uno_packages</value>
+                                    </prop>
+                                    <prop oor:name="Target" oor:type="xs:string">
+                                        <value>_self</value>
+                                    </prop>
+                                </node>
+                            </node>
+                        </node>
                     </node>
                 </node>
             </node>

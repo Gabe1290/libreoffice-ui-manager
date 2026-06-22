@@ -3,6 +3,14 @@
 All notable changes to LibreOffice UI Manager (LOUIM) are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.0.1] — 2026-06-20
+
+### Changed
+
+- The **LibreOffice UI Manager** menu is now placed as the **rightmost top-level
+  menu, after Help**, with a separator before it (via `OfficeMenuBarMerging`),
+  so it stands apart from the built-in menus instead of being mixed in.
+
 ## [4.0.0] — 2026-06-20
 
 Adds **LibreOffice Draw** — LOUIM now supports all four core apps (Writer, Calc,
