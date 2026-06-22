@@ -107,8 +107,13 @@ def _error_box(ctx, exc):
     _message_box(ctx, title, str(exc))
 
 
-def _pick_template(ctx, t):
-    """Open a file picker for a .louim template; return a system path or None."""
+def _pick_template(ctx, t, module):
+    """Open a file picker for a .louim template; return a system path or None.
+
+    Defaults to a filter for the active application (``<app>-*.louim``) so e.g.
+    Writer shows only Writer templates, with an "all templates" entry in the
+    filter dropdown as the escape hatch.
+    """
     from com.sun.star.ui.dialogs.ExecutableDialogResults import OK
 
     smgr = ctx.getServiceManager()
@@ -116,8 +121,11 @@ def _pick_template(ctx, t):
         "com.sun.star.ui.dialogs.FilePicker", ctx
     )
     picker.setTitle(t("pick_title"))
+    module_filter = t("filter_module", module.key.capitalize())
+    picker.appendFilter(module_filter, "%s-*.louim" % module.key)
     picker.appendFilter(t("filter_louim"), "*.louim")
     picker.appendFilter(t("filter_all"), "*.*")
+    picker.setCurrentFilter(module_filter)
 
     # Default to the starter templates bundled inside the deployed extension so
     # teachers land on writer-level-1/2 without hunting for a file. Best-effort:
@@ -137,8 +145,13 @@ def _pick_template(ctx, t):
     return uno.fileUrlToSystemPath(files[0]) if files else None
 
 
-def _pick_save_path(ctx, t):
-    """Open a Save dialog for a new .louim template; return a path or None."""
+def _pick_save_path(ctx, t, module):
+    """Open a Save dialog for a new .louim template; return a path or None.
+
+    Defaults the file name to ``<app>-my-template.louim`` so a saved template
+    follows the per-application naming convention and shows under that app's
+    filter when applied later.
+    """
     from com.sun.star.ui.dialogs.ExecutableDialogResults import OK
     from com.sun.star.ui.dialogs.TemplateDescription import (
         FILESAVE_AUTOEXTENSION,
@@ -152,7 +165,7 @@ def _pick_save_path(ctx, t):
     picker.setTitle(t("save_title"))
     picker.appendFilter(t("filter_louim"), "*.louim")
     picker.setCurrentFilter(t("filter_louim"))
-    picker.setDefaultName("my-template.louim")
+    picker.setDefaultName("%s-my-template.louim" % module.key)
 
     url = _package_url(ctx)
     if url:
@@ -185,7 +198,7 @@ def apply_template(*args):
         )
         from louim.adapters.writer.sidebar import apply_sidebar_profile
 
-        path = _pick_template(ctx, t)
+        path = _pick_template(ctx, t, module)
         if not path:
             return  # user cancelled
 
@@ -254,7 +267,7 @@ def export_template(*args):
         module = _current_module(ctx)
         from louim.template.saver import build_current_template, save_template
 
-        path = _pick_save_path(ctx, t)
+        path = _pick_save_path(ctx, t, module)
         if not path:
             return  # user cancelled
 

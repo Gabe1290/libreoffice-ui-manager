@@ -3,6 +3,18 @@
 All notable changes to LibreOffice UI Manager (LOUIM) are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.0.2] — 2026-06-20
+
+### Changed
+
+- **Apply Template…** now defaults its file filter to the active application
+  (`<app>-*.louim`), so Writer shows only Writer templates, Calc only Calc, etc.
+  — with an "All LOUIM templates" entry in the filter dropdown as the escape
+  hatch.
+- **Save Current Layout…** defaults the file name to `<app>-my-template.louim`,
+  so saved templates follow the per-application naming convention and appear
+  under that app's filter.
+
 ## [4.0.1] — 2026-06-20
 
 ### Changed

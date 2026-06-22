@@ -5,7 +5,7 @@
     xmlns:xlink="http://www.w3.org/1999/xlink">
 
     <identifier value="org.louim.libreoffice-ui-manager"/>
-    <version value="4.0.1"/>
+    <version value="4.0.2"/>
     <display-name>
         <name lang="en">LibreOffice UI Manager</name>
     </display-name>

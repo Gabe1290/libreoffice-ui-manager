@@ -30,10 +30,16 @@ _STRINGS = {
         "it": "Scegli un modello LOUIM",
     },
     "filter_louim": {
-        "en": "LOUIM templates (*.louim)",
-        "fr": "Modèles LOUIM (*.louim)",
-        "de": "LOUIM-Vorlagen (*.louim)",
-        "it": "Modelli LOUIM (*.louim)",
+        "en": "All LOUIM templates (*.louim)",
+        "fr": "Tous les modèles LOUIM (*.louim)",
+        "de": "Alle LOUIM-Vorlagen (*.louim)",
+        "it": "Tutti i modelli LOUIM (*.louim)",
+    },
+    "filter_module": {
+        "en": "%s templates (*.louim)",
+        "fr": "Modèles %s (*.louim)",
+        "de": "%s-Vorlagen (*.louim)",
+        "it": "Modelli %s (*.louim)",
     },
     "filter_all": {
         "en": "All files (*.*)",
