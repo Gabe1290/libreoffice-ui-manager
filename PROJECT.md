@@ -68,6 +68,27 @@ outside the package.
 4. Add a localized `description.xml` / `description.txt` for the Extension
    Manager (currently English only) if desired.
 
+## Done (verified on isolated instance) — Toolbar icons restore + reduce with menus
+
+Fixes a gap: removed toolbar icons were not restored by applying another
+template (e.g. `writer-full`), because pruning only undid LOUIM's own tracked
+changes.
+
+- `apply_toolbar_items` / `restore_toolbar_items` are now **non-cumulative across
+  all toolbars**: every Apply (and Restore) first resets *every* customized
+  toolbar to its factory definition, then removes the profile's hidden buttons —
+  so applying any template restores icons removed by LOUIM *or* by hand via
+  Tools ▸ Customize. Mirrors how the menu bar is rebuilt from the factory default.
+- `menu_command_descendants` (`menubar.py`) + `hidden_toolbar_commands`
+  (`toolbaritems.py`): with `hide_toolbar_buttons_with_menus`, hiding a whole
+  top-level menu now also drops the toolbar buttons for the features inside it.
+- Added the flag to `writer-level-1` / `writer-level-2`, so they reduce icons to
+  match their reduced menus.
+
+Verified on a throwaway headless instance: applying level-1 removed an
+Insert-menu feature's toolbar button; applying writer-full restored it; and an
+untracked manual removal was restored by a plain apply. 62 tests pass (3 new).
+
 ## Done (verified on isolated instance) — Export captures menu items + toolbar buttons
 
 "Save Current Layout as Template..." now snapshots the interface **item by

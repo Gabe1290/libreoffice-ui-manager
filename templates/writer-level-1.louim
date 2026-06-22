@@ -23,5 +23,6 @@
     "private:resource/toolbar/drawbar": true,
     "private:resource/toolbar/insertbar": false,
     "private:resource/toolbar/findbar": false
-  }
+  },
+  "hide_toolbar_buttons_with_menus": true
 }

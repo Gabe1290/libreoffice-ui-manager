@@ -40,6 +40,26 @@ def hidden_commands_for(template):
     return hidden
 
 
+def hidden_toolbar_commands(ctx, template):
+    """The full set of commands whose toolbar buttons a template hides.
+
+    Starts from ``hidden_commands_for`` (explicit ``toolbaritems`` plus, when the
+    flag is set, the commands hidden in ``menus``) and — when
+    ``hide_toolbar_buttons_with_menus`` is set — also expands every hidden *menu*
+    to the commands nested inside it, so hiding e.g. the whole Insert menu also
+    drops the Insert Table / Chart toolbar buttons. Needs ``ctx`` to read the
+    menu tree; the pure ``hidden_commands_for`` remains for templates that only
+    list individual commands.
+    """
+    hidden = hidden_commands_for(template)
+    if template.get("hide_toolbar_buttons_with_menus"):
+        from louim.adapters.writer.menubar import menu_command_descendants
+        menus_hidden = {c for c, v in template.get("menus", {}).items()
+                        if v is False}
+        hidden |= menu_command_descendants(ctx, menus_hidden)
+    return hidden
+
+
 def _collect_commands(container, out):
     """Collect every CommandURL under a settings container (depth-first)."""
     for i in range(container.getCount()):
@@ -119,32 +139,34 @@ def apply_toolbar_items(ctx, hidden_commands, path=None):
     be removed from every toolbar that holds them. Returns the list of toolbar
     resource URLs that were rewritten.
 
-    Non-cumulative: toolbars LOUIM customized on a previous apply are reset to
-    their factory definition first (recorded in the state file), so the result
-    only reflects the current profile.
+    Non-cumulative across **all** toolbars: every customized toolbar is first
+    reset to its factory definition — whether LOUIM pruned it before or the user
+    removed buttons by hand via Tools ▸ Customize — then the current profile's
+    hidden commands are removed. This mirrors how ``apply_menu_profile`` rebuilds
+    the whole menu bar from the factory default, so applying any template (even
+    one with no toolbar entries, like ``writer-full``) brings the toolbars back
+    to a known state and restores removed icons.
     """
     hidden_commands = set(hidden_commands)
     path = path or _state_path(ctx)
     ui_cfg = _module_ui_config(ctx)
+    resources = _toolbar_resources(ctx)
 
-    # Reset toolbars we rewrote last time back to their factory definition.
-    for resource in _load_state(path):
+    # Reset EVERY customized toolbar to its factory definition first.
+    for resource in resources:
         if ui_cfg.hasSettings(resource):
             ui_cfg.removeSettings(resource)
 
     modified = []
     if hidden_commands:
         hidden_map = {c: False for c in hidden_commands}
-        for resource in _toolbar_resources(ctx):
+        for resource in resources:
             try:
                 default = ui_cfg.getDefaultSettings(resource)
             except Exception:  # noqa: BLE001 — toolbar without a factory default
                 continue
-            present = _collect_commands(default, [])
-            if not hidden_commands.intersection(present):
+            if not hidden_commands.intersection(_collect_commands(default, [])):
                 continue  # nothing to remove from this toolbar
-            if ui_cfg.hasSettings(resource):
-                ui_cfg.removeSettings(resource)
             writable = ui_cfg.getSettings(resource, True)
             removed = []
             _prune_hidden(writable, hidden_map, removed)
@@ -158,15 +180,17 @@ def apply_toolbar_items(ctx, hidden_commands, path=None):
 
 
 def restore_toolbar_items(ctx, path=None):
-    """Restore every toolbar LOUIM pruned to its factory definition.
+    """Reset every customized toolbar to its factory definition.
 
-    Returns the list of resource URLs restored.
+    Returns the list of resource URLs restored. Like ``restore_default_menus``,
+    this returns the toolbars to the full built-in set, undoing both LOUIM's
+    pruning and any hand customization.
     """
     path = path or _state_path(ctx)
     ui_cfg = _module_ui_config(ctx)
 
     restored = []
-    for resource in _load_state(path):
+    for resource in _toolbar_resources(ctx):
         if ui_cfg.hasSettings(resource):
             ui_cfg.removeSettings(resource)
             restored.append(resource)

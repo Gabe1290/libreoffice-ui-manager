@@ -131,8 +131,17 @@ it removed — there are two fields:
   has its button removed from every toolbar that holds it (at any depth,
   including dropdown sub-items). These are the same `.uno:` IDs used in `menus`.
 - `hide_toolbar_buttons_with_menus` — a boolean. When `true`, every command you
-  hide in `menus` also has its toolbar button removed, so reducing the menus
-  reduces the matching icons without listing them twice.
+  hide in `menus` also has its toolbar button removed — and hiding a whole
+  top-level menu (e.g. `.uno:InsertMenu`) removes the toolbar buttons for the
+  features inside it (Insert Table, Insert Chart, …). This is how the bundled
+  `writer-level-1` / `writer-level-2` reduce their icons to match their reduced
+  menus without listing each button.
+
+Toolbar-button pruning is **non-cumulative across all toolbars**: every Apply
+first resets every customized toolbar to its factory definition, then removes the
+hidden buttons. So applying any template — even `writer-full`, which lists no
+toolbar buttons — restores icons that were removed earlier, whether by LOUIM or
+by hand via Tools ▸ Customize.
 
 ```json
 "menus": { ".uno:InsertObjectChart": false },

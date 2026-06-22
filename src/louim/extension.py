@@ -177,7 +177,7 @@ def apply_template(*args):
         from louim.adapters.writer.addons import apply_addon_profile
         from louim.adapters.writer.toolbars import apply_toolbar_profile
         from louim.adapters.writer.toolbaritems import (
-            apply_toolbar_items, hidden_commands_for,
+            apply_toolbar_items, hidden_toolbar_commands,
         )
         from louim.adapters.writer.sidebar import apply_sidebar_profile
 
@@ -194,7 +194,7 @@ def apply_template(*args):
         hidden = apply_menu_profile(ctx, template.get("menus", {}))
         hidden_addons = apply_addon_profile(ctx, template.get("addons", {}))
         hidden_toolbars = apply_toolbar_profile(ctx, template.get("toolbars", {}))
-        apply_toolbar_items(ctx, hidden_commands_for(template))
+        apply_toolbar_items(ctx, hidden_toolbar_commands(ctx, template))
         hidden_decks = apply_sidebar_profile(ctx, template.get("sidebar", {}))
         name = template.get("profile", {}).get("name") or os.path.basename(path)
         _message_box(

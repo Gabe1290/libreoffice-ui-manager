@@ -44,7 +44,7 @@ from louim.adapters.writer.sidebar import (  # noqa: E402
 from louim.adapters.writer.toolbaritems import (  # noqa: E402
     apply_toolbar_items,
     restore_toolbar_items,
-    hidden_commands_for,
+    hidden_toolbar_commands,
 )
 from louim.template.loader import load_template  # noqa: E402
 
@@ -101,7 +101,7 @@ def main():
     hidden = apply_menu_profile(ctx, template.get("menus", {}))
     hidden_addons = apply_addon_profile(ctx, template.get("addons", {}))
     hidden_toolbars = apply_toolbar_profile(ctx, template.get("toolbars", {}))
-    modified_item_bars = apply_toolbar_items(ctx, hidden_commands_for(template))
+    modified_item_bars = apply_toolbar_items(ctx, hidden_toolbar_commands(ctx, template))
     hidden_decks = apply_sidebar_profile(ctx, template.get("sidebar", {}))
     print("Applied profile: %s" % profile.get("name", args.template))
     print("Hidden %d menu(s): %s" % (len(hidden), ", ".join(hidden) or "none"))

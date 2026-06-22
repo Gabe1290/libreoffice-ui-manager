@@ -11,7 +11,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from louim.adapters.writer.menubar import _export_walk, _collect_command_set  # noqa: E402
+from louim.adapters.writer.menubar import (  # noqa: E402
+    _export_walk, _collect_command_set, _collect_descendants,
+)
 
 
 class _Prop:
@@ -84,6 +86,30 @@ class ExportWalkTest(unittest.TestCase):
             _collect_command_set(default, set()),
             {".uno:FileMenu", ".uno:InsertMenu", ".uno:InsertPagebreak"},
         )
+
+
+class CollectDescendantsTest(unittest.TestCase):
+    def test_collects_commands_inside_targeted_menu_only(self):
+        insert = menu(".uno:InsertMenu",
+                      item(".uno:InsertTable"), item(".uno:InsertObjectChart"))
+        tools = menu(".uno:ToolsMenu", item(".uno:Macro"))
+        default = FakeContainer([item(".uno:FileMenu"), insert, tools])
+        out = _collect_descendants(default, {".uno:InsertMenu"}, False, set())
+        # Only Insert's children; the menu itself and other menus excluded.
+        self.assertEqual(out, {".uno:InsertTable", ".uno:InsertObjectChart"})
+
+    def test_recurses_into_nested_submenus(self):
+        shapes = menu(".uno:ShapesMenu", item(".uno:BasicShapes"))
+        insert = menu(".uno:InsertMenu", item(".uno:InsertTable"), shapes)
+        default = FakeContainer([insert])
+        out = _collect_descendants(default, {".uno:InsertMenu"}, False, set())
+        self.assertEqual(out, {".uno:InsertTable", ".uno:ShapesMenu",
+                               ".uno:BasicShapes"})
+
+    def test_no_targets_collects_nothing(self):
+        insert = menu(".uno:InsertMenu", item(".uno:InsertTable"))
+        default = FakeContainer([insert])
+        self.assertEqual(_collect_descendants(default, set(), False, set()), set())
 
 
 if __name__ == "__main__":

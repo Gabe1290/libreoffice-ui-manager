@@ -165,6 +165,31 @@ def _export_walk(container, current_cmds, parent_visible, is_top, snapshot):
     return snapshot
 
 
+def _collect_descendants(container, targets, inside, out):
+    """Collect commands nested under any menu whose command is in ``targets``."""
+    for i in range(container.getCount()):
+        entry = _props_to_dict(container.getByIndex(i))
+        command = entry.get("CommandURL")
+        if inside and command:
+            out.add(command)
+        sub = entry.get("ItemDescriptorContainer")
+        if sub is not None:
+            _collect_descendants(sub, targets, inside or command in targets, out)
+    return out
+
+
+def menu_command_descendants(ctx, menu_commands):
+    """Return every command nested inside the given menus (factory default tree).
+
+    For each command in ``menu_commands`` that is a menu (has a submenu), returns
+    the command IDs of all items inside it, recursively (the menus themselves are
+    not included). Hiding a top-level menu can then also hide the *toolbar*
+    buttons for the features that lived in that menu.
+    """
+    default = _module_ui_config(ctx).getDefaultSettings(MENUBAR_RESOURCE)
+    return _collect_descendants(default, set(menu_commands), False, set())
+
+
 def menu_visibility(ctx):
     """Snapshot the current menu state for export, including submenu items.
 
