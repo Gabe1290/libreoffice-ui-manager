@@ -41,6 +41,11 @@ from louim.adapters.writer.sidebar import (  # noqa: E402
     apply_sidebar_profile,
     restore_sidebar_decks,
 )
+from louim.adapters.writer.toolbaritems import (  # noqa: E402
+    apply_toolbar_items,
+    restore_toolbar_items,
+    hidden_commands_for,
+)
 from louim.template.loader import load_template  # noqa: E402
 
 
@@ -77,6 +82,7 @@ def main():
         restored_menus = restore_default_menus(ctx)
         restored_addons = restore_addon_menus(ctx)
         restored_toolbars = restore_toolbars(ctx)
+        restored_items = restore_toolbar_items(ctx)
         restored_decks = restore_sidebar_decks(ctx)
         print("Restored default menu bar." if restored_menus
               else "Menu bar already default.")
@@ -84,6 +90,8 @@ def main():
               % (len(restored_addons), ", ".join(restored_addons) or "none"))
         print("Restored %d toolbar(s): %s"
               % (len(restored_toolbars), ", ".join(restored_toolbars) or "none"))
+        print("Restored toolbar buttons in %d toolbar(s): %s"
+              % (len(restored_items), ", ".join(restored_items) or "none"))
         print("Restored %d sidebar deck(s): %s"
               % (len(restored_decks), ", ".join(restored_decks) or "none"))
         return 0
@@ -93,6 +101,7 @@ def main():
     hidden = apply_menu_profile(ctx, template.get("menus", {}))
     hidden_addons = apply_addon_profile(ctx, template.get("addons", {}))
     hidden_toolbars = apply_toolbar_profile(ctx, template.get("toolbars", {}))
+    modified_item_bars = apply_toolbar_items(ctx, hidden_commands_for(template))
     hidden_decks = apply_sidebar_profile(ctx, template.get("sidebar", {}))
     print("Applied profile: %s" % profile.get("name", args.template))
     print("Hidden %d menu(s): %s" % (len(hidden), ", ".join(hidden) or "none"))
@@ -100,6 +109,8 @@ def main():
           % (len(hidden_addons), ", ".join(hidden_addons) or "none"))
     print("Hidden %d toolbar(s): %s"
           % (len(hidden_toolbars), ", ".join(hidden_toolbars) or "none"))
+    print("Pruned buttons in %d toolbar(s): %s"
+          % (len(modified_item_bars), ", ".join(modified_item_bars) or "none"))
     print("Hidden %d sidebar deck(s): %s"
           % (len(hidden_decks), ", ".join(hidden_decks) or "none"))
     return 0

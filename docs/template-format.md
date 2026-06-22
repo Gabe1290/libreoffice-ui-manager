@@ -121,6 +121,33 @@ had before (including removing a window-state entry LOUIM had to create).
 Run `tools/discover-menus.py` to list the exact toolbar resource URLs and their
 display names for your LibreOffice version.
 
+## Toolbar buttons (icons)
+
+The `toolbars` section above shows/hides *whole* toolbars. To thin out the icons
+*inside* the toolbars — so a simplified profile doesn't show buttons for features
+it removed — there are two fields:
+
+- `toolbaritems` — a map of UNO command ID → boolean. Any command marked `false`
+  has its button removed from every toolbar that holds it (at any depth,
+  including dropdown sub-items). These are the same `.uno:` IDs used in `menus`.
+- `hide_toolbar_buttons_with_menus` — a boolean. When `true`, every command you
+  hide in `menus` also has its toolbar button removed, so reducing the menus
+  reduces the matching icons without listing them twice.
+
+```json
+"menus": { ".uno:InsertObjectChart": false },
+"toolbaritems": { ".uno:InsertTable": false },
+"hide_toolbar_buttons_with_menus": true
+```
+
+The example removes both the Insert Chart button (because its menu entry is
+hidden and the flag is on) and the Insert Table button (listed explicitly).
+Pruning is non-cumulative and rebuilt from each toolbar's factory definition, so
+"Restore Full Menus" returns every pruned toolbar to its original buttons.
+
+Use `tools/discover-menus.py --tree` to find the command ID of any button (the
+same IDs appear on toolbars and in menus).
+
 ## Sidebar
 
 The optional `sidebar` object hides or shows whole sidebar **decks** (Properties,

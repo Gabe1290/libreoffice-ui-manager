@@ -68,6 +68,29 @@ outside the package.
 4. Add a localized `description.xml` / `description.txt` for the Extension
    Manager (currently English only) if desired.
 
+## Done (verified on isolated instance) — Toolbar-button hiding (Apply Engine v5)
+
+Templates can now thin the icons *inside* toolbars, not just hide whole toolbars,
+so a simplified profile drops the buttons for features it removed.
+`src/louim/adapters/writer/toolbaritems.py`:
+
+- `toolbaritems` (template) — a command → bool map; buttons for commands marked
+  `false` are removed from every toolbar that holds them.
+- `hide_toolbar_buttons_with_menus` (template, bool) — when true, every command
+  hidden in `menus` also loses its toolbar button (the requested "reduce menus →
+  reduce icons" behaviour). `hidden_commands_for(template)` is the pure helper
+  that unions the two sources.
+- Reuses the menu bar's recursive `_prune_hidden`: each affected toolbar is reset
+  to its factory definition and pruned, recorded in `louim-toolbaritem-state.json`
+  so restore reverts exactly. Only toolbars that actually contain a hidden command
+  are touched (cheap `getDefaultSettings` membership pre-check).
+
+Wired into the extension apply/restore, the `apply-template.py` dev tool, the
+loader, and `docs/template-format.md`. Pure logic unit-tested (54 tests pass).
+**Verified** on a throwaway headless instance: hiding a Standard-toolbar command
+dropped it (53 → 52 buttons) and restore brought it back (→ 53); the
+auto-match-menus path was exercised.
+
 ## Done — Localization: English, French, German, Italian
 
 LOUIM's own UI is now translated. The engine was already language-independent

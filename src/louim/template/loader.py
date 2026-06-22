@@ -36,7 +36,15 @@ def load_template(path):
     _validate_bool_map(data.get("menus", {}), "menus", "menu")
     _validate_bool_map(data.get("addons", {}), "addons", "addon")
     _validate_bool_map(data.get("toolbars", {}), "toolbars", "toolbar")
+    _validate_bool_map(data.get("toolbaritems", {}), "toolbaritems", "toolbar item")
     _validate_bool_map(data.get("sidebar", {}), "sidebar", "sidebar deck")
+
+    flag = data.get("hide_toolbar_buttons_with_menus", False)
+    if not isinstance(flag, bool):
+        raise TemplateError(
+            "'hide_toolbar_buttons_with_menus' must be true or false, got %r"
+            % flag
+        )
 
     return data
 

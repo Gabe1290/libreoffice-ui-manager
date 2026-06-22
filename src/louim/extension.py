@@ -176,6 +176,9 @@ def apply_template(*args):
         from louim.adapters.writer.menubar import apply_menu_profile
         from louim.adapters.writer.addons import apply_addon_profile
         from louim.adapters.writer.toolbars import apply_toolbar_profile
+        from louim.adapters.writer.toolbaritems import (
+            apply_toolbar_items, hidden_commands_for,
+        )
         from louim.adapters.writer.sidebar import apply_sidebar_profile
 
         path = _pick_template(ctx, t)
@@ -191,6 +194,7 @@ def apply_template(*args):
         hidden = apply_menu_profile(ctx, template.get("menus", {}))
         hidden_addons = apply_addon_profile(ctx, template.get("addons", {}))
         hidden_toolbars = apply_toolbar_profile(ctx, template.get("toolbars", {}))
+        apply_toolbar_items(ctx, hidden_commands_for(template))
         hidden_decks = apply_sidebar_profile(ctx, template.get("sidebar", {}))
         name = template.get("profile", {}).get("name") or os.path.basename(path)
         _message_box(
@@ -212,11 +216,13 @@ def restore_menus(*args):
         from louim.adapters.writer.menubar import restore_default_menus
         from louim.adapters.writer.addons import restore_addon_menus
         from louim.adapters.writer.toolbars import restore_toolbars
+        from louim.adapters.writer.toolbaritems import restore_toolbar_items
         from louim.adapters.writer.sidebar import restore_sidebar_decks
 
         restore_default_menus(ctx)
         restore_addon_menus(ctx)
         restore_toolbars(ctx)
+        restore_toolbar_items(ctx)
         restore_sidebar_decks(ctx)
         _message_box(ctx, t("product"), t("restore_body"))
     except Exception as exc:  # noqa: BLE001
