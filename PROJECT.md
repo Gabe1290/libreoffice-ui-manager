@@ -10,19 +10,18 @@ LOUIM is not primarily a lockdown tool. It is a learning tool.
 
 ## Current Milestone
 
-Milestone 0.3 — First working extension.
+**Version 1.0.0 — Stable Writer Release (shipped 2026-06-20).**
 
-Goal:
+Milestones 0.1–0.7 are complete and verified: discovery, template
+load/save/export, and the Apply Engine across menus, submenu items, toolbars,
+toolbar buttons, sidebar decks, and extension menus — plus en/fr/de/it
+localization. See CHANGELOG.md. Next horizons are Calc (2.0), Impress (3.0),
+Draw (4.0).
 
-- Installable `.oxt`
-- Entry in LibreOffice Writer
-- Simple "Hello LOUIM" dialog
+## Resolved
 
-No menu hiding yet.
-
-## Current Problem
-
-RESOLVED — the bundled Python entry point now resolves and executes.
+The bundled Python entry point resolves and executes; the engine is wired into
+the menu and verified.
 
 Root causes that were fixed:
 
