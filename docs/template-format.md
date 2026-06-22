@@ -182,10 +182,18 @@ resource URLs exactly as discovered (they are language-independent — never put
 localized label in the file).
 
 To start from what you already have, use **LibreOffice UI Manager > Save Current
-Layout as Template...**. LOUIM snapshots the current visibility of the top-level
-menus, extension menus, toolbars, and sidebar decks into a new `.louim` file,
-which you can then trim and rename. To keep the file readable, the toolbar
-snapshot is limited to the common Writer toolbars (plus any you have explicitly
-hidden) rather than every internal toolbar; add other toolbar resource URLs by
-hand if you need them. The command-line equivalent is `tools/export-template.py`
-(run against a Writer started with a UNO socket).
+Layout as Template...**. LOUIM snapshots the current interface into a new
+`.louim` file you can trim and rename. The snapshot captures, **item by item**:
+
+- **menus** — every top-level menu (true/false) and every individual menu item
+  you have removed (via Tools ▸ Customize) as `false`;
+- **toolbaritems** — every toolbar button you have removed as `false`;
+- **toolbars** — the common Writer toolbars' visibility (plus any you hid);
+- **sidebar** — each deck's visibility; **addons** — extension menus.
+
+This means a teacher can build a real "beginner" profile by hand: use
+**Tools ▸ Customize** to strip the menus and toolbars down to just what learners
+need, then **Save Current Layout as Template…** to capture that exact reduced
+interface. Only what differs from the default is written, so the file stays
+readable. The command-line equivalent is `tools/export-template.py` (run against
+a Writer started with a UNO socket).

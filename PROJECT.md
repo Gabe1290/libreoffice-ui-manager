@@ -68,6 +68,26 @@ outside the package.
 4. Add a localized `description.xml` / `description.txt` for the Extension
    Manager (currently English only) if desired.
 
+## Done (verified on isolated instance) — Export captures menu items + toolbar buttons
+
+"Save Current Layout as Template..." now snapshots the interface **item by
+item**, not just top-level menus — so a teacher can hand-trim via Tools ▸
+Customize and export a faithful "beginner" profile.
+
+- `menu_visibility` (`menubar.py`) was rewritten: it walks the factory-default
+  tree against the live menu bar and records every top-level menu (true/false)
+  plus every removed nested item as `false`. Parent-aware, so children of an
+  already-hidden menu aren't redundantly listed. Pure `_export_walk` /
+  `_collect_command_set` are unit-tested with fake containers.
+- `toolbar_item_visibility` (`toolbaritems.py`) records removed toolbar buttons
+  as `toolbaritems` `false`.
+- `assemble_template` gained a `toolbaritems` slot (emitted only when non-empty);
+  `build_current_template` wires both in.
+
+Round-trip **verified** on a throwaway headless instance: after hiding a
+top-level menu, a nested item, and a toolbar button, the export captured all
+three (and left visible menus `true`). 59 unit tests pass (5 new).
+
 ## Done (verified on isolated instance) — Toolbar-button hiding (Apply Engine v5)
 
 Templates can now thin the icons *inside* toolbars, not just hide whole toolbars,

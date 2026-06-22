@@ -127,24 +127,63 @@ def discover_menu_items(ctx):
     return _walk_items(default, [], [], _command_labels(ctx))
 
 
-def menu_visibility(ctx):
-    """Snapshot the current visibility of every top-level Writer menu.
+def _collect_command_set(container, out):
+    """Add every CommandURL under ``container`` (depth-first) to the set ``out``."""
+    for i in range(container.getCount()):
+        entry = _props_to_dict(container.getByIndex(i))
+        command = entry.get("CommandURL")
+        if command:
+            out.add(command)
+        sub = entry.get("ItemDescriptorContainer")
+        if sub is not None:
+            _collect_command_set(sub, out)
+    return out
 
-    Returns a dict mapping each factory-default menu's UNO command ID to a bool
-    (True = currently shown in the live menu bar, False = currently hidden). This
-    is the shape a .louim template's "menus" section uses, so it is the basis for
-    exporting the current interface as a template.
+
+def _export_walk(container, current_cmds, parent_visible, is_top, snapshot):
+    """Record the visibility of menu commands for an exported template.
+
+    Walks the factory-default tree and compares against ``current_cmds`` (the
+    commands present in the live menu bar). Top-level menus are always recorded
+    (True/False); a nested item is recorded only when it is hidden *and* its
+    parent menu is still shown — so the export captures items a teacher removed
+    via Tools ▸ Customize without listing every child of an already-hidden menu.
+    """
+    for i in range(container.getCount()):
+        entry = _props_to_dict(container.getByIndex(i))
+        command = entry.get("CommandURL")
+        visible = command in current_cmds if command else True
+        if command:
+            if is_top:
+                snapshot[command] = visible
+            elif parent_visible and not visible:
+                snapshot[command] = False
+        sub = entry.get("ItemDescriptorContainer")
+        if sub is not None:
+            _export_walk(sub, current_cmds, parent_visible and visible, False,
+                         snapshot)
+    return snapshot
+
+
+def menu_visibility(ctx):
+    """Snapshot the current menu state for export, including submenu items.
+
+    Returns a dict mapping UNO command IDs to booleans in the shape a .louim
+    template's "menus" section uses:
+
+    - every top-level menu → True (shown) or False (hidden);
+    - every nested item a teacher has removed (present in the factory default but
+      not in the live menu bar) → False.
+
+    Unlisted commands stay visible on apply, so the result reproduces the current
+    (possibly hand-customized) menus exactly, item by item.
     """
     ui_cfg = _module_ui_config(ctx)
     default = ui_cfg.getDefaultSettings(MENUBAR_RESOURCE)
-
-    visible_now = {m["command"] for m in discover_top_level_menus(ctx)}
-    snapshot = {}
-    for i in range(default.getCount()):
-        command = _props_to_dict(default.getByIndex(i)).get("CommandURL")
-        if command:
-            snapshot[command] = command in visible_now
-    return snapshot
+    current_cmds = _collect_command_set(
+        ui_cfg.getSettings(MENUBAR_RESOURCE, False), set()
+    )
+    return _export_walk(default, current_cmds, True, True, {})
 
 
 def _prune_hidden(container, menus, hidden):

@@ -82,6 +82,36 @@ def _toolbar_resources(ctx):
     return [t["resource"] for t in discover_toolbars(ctx)]
 
 
+def toolbar_item_visibility(ctx):
+    """Snapshot toolbar buttons a teacher has removed, as {command: False}.
+
+    For every toolbar, compares its factory default button list against the live
+    one and records each command present in the default but missing now. This is
+    the ``toolbaritems`` shape, so exporting then applying reproduces the current
+    (possibly hand-customized) toolbar buttons. Buttons left in place are omitted
+    (they default to visible on apply).
+    """
+    ui_cfg = _module_ui_config(ctx)
+    hidden = {}
+    for resource in _toolbar_resources(ctx):
+        try:
+            default = ui_cfg.getDefaultSettings(resource)
+        except Exception:  # noqa: BLE001 — toolbar without a factory default
+            continue
+        default_cmds = _collect_commands(default, [])
+        if not default_cmds:
+            continue
+        try:
+            current = ui_cfg.getSettings(resource, False)
+        except Exception:  # noqa: BLE001
+            continue
+        current_cmds = set(_collect_commands(current, []))
+        for command in default_cmds:
+            if command and command not in current_cmds:
+                hidden[command] = False
+    return hidden
+
+
 def apply_toolbar_items(ctx, hidden_commands, path=None):
     """Hide individual toolbar buttons for the given command IDs.
 
