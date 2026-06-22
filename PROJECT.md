@@ -56,19 +56,17 @@ outside the package.
 
 ## Next Session Tasks
 
-1. GUI-verify in a real Writer window (config behaviour already verified live —
-   see below): Apply "Getting Started" and confirm the Drawing toolbar appears
-   and Find/Insert are gone; "Save Current Layout as Template..." writes a
-   .louim you can reopen; Apply it back. Then confirm "Complete Writer" / the
-   Restore entry return the full interface.
-2. **GUI-verify the sidebar** (see below): the engine + ContextList logic are
-   built and unit-tested, but apply/restore are not yet verified on a live
-   instance (deliberately, per the no-live-testing rule). Confirm in a real
-   Writer — or a throwaway headless instance — that a template hiding e.g.
-   `GalleryDeck` removes it from the sidebar deck list and Restore brings it
-   back, and that Calc/Draw still show it.
+1. End-to-end GUI smoke test in a real Writer window (all surfaces verified via
+   the engine/headless, but not yet eyeballed together): install `dist/louim.oxt`,
+   Apply "Getting Started", confirm Drawing toolbar shows / Find+Insert gone;
+   add a `sidebar` entry hiding `GalleryDeck` and confirm it leaves the sidebar;
+   "Save Current Layout as Template..." round-trips; Restore returns everything.
+2. Verify the fr/de/it UI in a non-English LibreOffice (string + format parity
+   already unit-tested; this is the on-screen confirmation).
 3. Decide whether the in-app export should also capture **nested menu items**
    (currently top-level menus only; full-tree capture would be large/verbose).
+4. Add a localized `description.xml` / `description.txt` for the Extension
+   Manager (currently English only) if desired.
 
 ## Done — Localization: English, French, German, Italian
 
@@ -93,13 +91,13 @@ LOUIM's own surfaces needed work:
 Not localized (deliberate, low value): the Extension Manager `description.xml`
 display name (a brand) and the `description.txt` blurb.
 
-## Done (pending GUI verification) — Discovery labels + leaner export
+## Done — Discovery labels (verified) + leaner export
 
 - **Menu labels** now resolve via the `UICommandDescription` service
   (`menubar.py` `_command_labels` / `_label_for`), so `discover-menus.py` shows
   real names even with no document frame open (the menu-bar config leaves
-  `Label` empty). Labels are display-only — never written to a template — so this
-  is low-risk; confirm cosmetically with `discover-menus.py [--tree]`.
+  `Label` empty). **Verified** on the isolated instance: 11/11 top-level menus
+  and 553/553 menu items resolved real names.
 - **Leaner export**: `curate_toolbars` (in `toolbars.py`) trims the exported
   `toolbars` map to the common Writer toolbars plus anything explicitly hidden,
   instead of all ~58 window-state toolbars, so saved templates stay readable.
@@ -107,7 +105,23 @@ display name (a brand) and the `description.txt` blurb.
 - Refactored `toolbars.py` to import `uno` lazily (like `menubar.py`/`sidebar.py`)
   so `curate_toolbars` is testable offline. Suite: 38 tests pass (5 new).
 
-## Done (pending GUI verification) — Sidebar deck hiding (Apply Engine v4)
+## Done (verified on isolated instance) — Sidebar deck hiding (Apply Engine v4)
+
+Verified 2026-06-20 on a **throwaway headless LibreOffice** (its own
+`UserInstallation` profile + port 2003, terminated via its own socket — the
+user's session never touched, per the safety rules). Hiding `GalleryDeck`
+removed the `WriterVariants` entry from its `ContextList`
+(`shows_in_writer` → False) and restore returned the list byte-for-byte. Menu
+**labels** were verified in the same run: 11/11 top-level menus and 553/553
+menu items resolve real names via `UICommandDescription`.
+
+The run also **caught a bug**: `setPropertyValue("ContextList", tuple(...))`
+threw "inappropriate property value" — the config manager needs an explicitly
+typed string sequence. Fixed `_set_context_list` to pass
+`uno.Any("[]string", ...)` via `uno.invoke` (same idiom as the menu-bar
+adapter). This is exactly the kind of defect headless verification is for.
+
+Design details:
 
 `src/louim/adapters/writer/sidebar.py` hides/shows whole sidebar decks
 (Properties, Styles, Gallery, Navigator, …), mirroring addons.py: a deck appears

@@ -118,8 +118,13 @@ def _context_list(provider, deck_id):
 
 
 def _set_context_list(provider, deck_id, entries):
+    import uno
     upd = _update_access(provider, _deck_path(deck_id))
-    upd.setPropertyValue("ContextList", tuple(entries))
+    # ContextList is a string sequence; the config manager rejects a bare Python
+    # tuple ("inappropriate property value"). Hand it an explicitly typed Any via
+    # uno.invoke, the same way the menu-bar adapter passes typed sequences.
+    value = uno.Any("[]string", tuple(entries))
+    uno.invoke(upd, "setPropertyValue", ("ContextList", value))
     upd.commitChanges()
 
 
