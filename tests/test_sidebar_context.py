@@ -14,7 +14,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from louim.adapters.writer.sidebar import (  # noqa: E402
     shows_in_module, strip_module,
 )
-from louim.adapters.modules import WRITER, CALC  # noqa: E402
+from louim.adapters.modules import WRITER, CALC, IMPRESS  # noqa: E402
 
 
 class ShowsInModuleTest(unittest.TestCase):
@@ -67,6 +67,27 @@ class StripModuleTest(unittest.TestCase):
         once = strip_module(["WriterVariants, any, visible", "Calc, any, visible"],
                             WRITER)
         self.assertEqual(strip_module(once, WRITER), once)
+
+
+class ImpressGroupTest(unittest.TestCase):
+    """DrawImpress is shared with Draw — hiding from Impress must keep Draw."""
+
+    def test_drawimpress_shows_in_impress(self):
+        self.assertTrue(shows_in_module(["DrawImpress, any, visible"], IMPRESS))
+
+    def test_strip_impress_replaces_group_with_draw(self):
+        out = strip_module(["DrawImpress, any, visible"], IMPRESS)
+        self.assertEqual(out, ["Draw, any, visible"])
+        self.assertFalse(shows_in_module(out, IMPRESS))
+        # Crucially, the deck still shows in Draw.
+        from louim.adapters.modules import Module
+        draw = Module("draw", "s", "n", ("Draw", "DrawImpress"),
+                      ("Impress",), ("c",), ("o",),
+                      deck_group_subs={"DrawImpress": ("Impress",)})
+        self.assertTrue(shows_in_module(out, draw))
+
+    def test_plain_impress_entry_dropped(self):
+        self.assertEqual(strip_module(["Impress, any, visible"], IMPRESS), [])
 
 
 if __name__ == "__main__":

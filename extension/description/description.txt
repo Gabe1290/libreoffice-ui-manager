@@ -1,5 +1,5 @@
 LibreOffice UI Manager (LOUIM) helps teachers progressively simplify the
-LibreOffice Writer and Calc interface for learners. Apply a .louim template to hide or
+LibreOffice Writer, Calc, and Impress interface for learners. Apply a .louim template to hide or
 show menus, individual menu items, toolbars, toolbar buttons, sidebar decks, and
 extension menus, and restore the full interface at any time. Save your own
 layout as a template to share a "beginner" profile across machines. Available in

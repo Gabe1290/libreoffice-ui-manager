@@ -53,18 +53,23 @@ def shows_in_module(context_list, module=WRITER):
 def strip_module(context_list, module=WRITER):
     """Return a ContextList with ``module`` removed (kept elsewhere).
 
-    The module's entries are dropped. A catch-all "any" entry is rewritten to the
-    other applications so the deck still appears outside this module.
+    The module's own entries are dropped. A catch-all "any" entry is rewritten to
+    the other applications so the deck still appears outside this module. A shared
+    context *group* (e.g. "DrawImpress", which covers Draw + Impress) is replaced
+    with the apps to keep — so hiding a deck from Impress leaves it in Draw.
     """
     out = []
     for entry in context_list:
         app = _app_of(entry)
+        rest = _rest_of(entry)
         if app == "any":
-            rest = _rest_of(entry)
             for other in module.other_deck_apps:
                 out.append("%s, %s" % (other, rest) if rest else other)
+        elif app in module.deck_group_subs:
+            for keep in module.deck_group_subs[app]:
+                out.append("%s, %s" % (keep, rest) if rest else keep)
         elif app in module.deck_apps:
-            continue  # drop the module's entry
+            continue  # drop the module's own entry
         else:
             out.append(entry)
     return out

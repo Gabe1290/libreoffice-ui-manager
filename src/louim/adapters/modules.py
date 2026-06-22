@@ -13,7 +13,8 @@ class Module:
     """Application-specific identifiers the adapters need."""
 
     def __init__(self, key, doc_service, windowstate_node,
-                 deck_apps, other_deck_apps, addon_contexts, other_addon_contexts):
+                 deck_apps, other_deck_apps, addon_contexts, other_addon_contexts,
+                 deck_group_subs=None):
         self.key = key                          # template "application" value
         self.doc_service = doc_service          # module UI config / command labels
         self.windowstate_node = windowstate_node  # toolbar visibility states
@@ -21,6 +22,10 @@ class Module:
         self.other_deck_apps = tuple(other_deck_apps)        # for "any" expansion
         self.addon_contexts = tuple(addon_contexts)          # addon shows here
         self.other_addon_contexts = tuple(other_addon_contexts)  # addon fallback
+        # Sidebar context groups shared with another app (e.g. "DrawImpress"
+        # covers Draw + Impress): when stripping this module, replace the group
+        # with the apps to keep instead of dropping it. {group: (keep, ...)}.
+        self.deck_group_subs = dict(deck_group_subs or {})
 
     def __repr__(self):
         return "Module(%r)" % self.key
@@ -57,7 +62,26 @@ CALC = Module(
                           "com.sun.star.formula.FormulaProperties"),
 )
 
-MODULES = {m.key: m for m in (WRITER, CALC)}
+IMPRESS = Module(
+    key="impress",
+    doc_service="com.sun.star.presentation.PresentationDocument",
+    windowstate_node="/org.openoffice.Office.UI.ImpressWindowState/UIElements/States",
+    # A deck shows in Impress via the plain "Impress" app or the shared
+    # "DrawImpress" group; the group is replaced with "Draw" on strip so the deck
+    # stays in Draw.
+    deck_apps=("Impress", "DrawImpress"),
+    deck_group_subs={"DrawImpress": ("Draw",)},
+    other_deck_apps=("WriterVariants", "Calc", "Draw", "Chart", "Math"),
+    addon_contexts=("com.sun.star.presentation.PresentationDocument",),
+    other_addon_contexts=("com.sun.star.text.TextDocument",
+                          "com.sun.star.text.WebDocument",
+                          "com.sun.star.text.GlobalDocument",
+                          "com.sun.star.sheet.SpreadsheetDocument",
+                          "com.sun.star.drawing.DrawingDocument",
+                          "com.sun.star.formula.FormulaProperties"),
+)
+
+MODULES = {m.key: m for m in (WRITER, CALC, IMPRESS)}
 
 
 def get_module(key):

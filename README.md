@@ -5,8 +5,8 @@ LibreOffice interface.
 
 Its goal is to help students and adult beginners learn word processing progressively, without being overwhelmed by too many menus and options.
 
-**Version 2.0.0** — stable release for LibreOffice **Writer** and **Calc**.
-Available in English, French, German, and Italian.
+**Version 3.0.0** — stable release for LibreOffice **Writer**, **Calc**, and
+**Impress**. Available in English, French, German, and Italian.
 
 ## Install
 
@@ -21,8 +21,8 @@ Or build it yourself with `python tools/build.py` (output in `dist/louim.oxt`).
 
 ## Supported applications
 
-Writer and Calc. (Impress and Draw are on the roadmap and follow the same
-module pattern.)
+Writer, Calc, and Impress. (Draw is on the roadmap and follows the same module
+pattern.)
 
 ## Main idea
 

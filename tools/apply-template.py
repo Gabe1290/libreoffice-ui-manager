@@ -65,7 +65,7 @@ def main():
     parser.add_argument("template", nargs="?", help="path to a .louim template")
     parser.add_argument("--restore", action="store_true",
                         help="restore the factory-default interface")
-    parser.add_argument("--module", default="writer", choices=("writer", "calc"),
+    parser.add_argument("--module", default="writer", choices=("writer", "calc", "impress"),
                         help="application to restore (apply uses the template's "
                              "own application); default: writer")
     parser.add_argument("--host", default="localhost")

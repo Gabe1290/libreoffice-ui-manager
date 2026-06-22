@@ -43,7 +43,7 @@ def main():
     parser.add_argument("--name", default=None,
                         help="profile name (defaults to the output file stem)")
     parser.add_argument("--description", default="")
-    parser.add_argument("--module", default="writer", choices=("writer", "calc"),
+    parser.add_argument("--module", default="writer", choices=("writer", "calc", "impress"),
                         help="application to snapshot (default: writer)")
     parser.add_argument("--host", default="localhost")
     parser.add_argument("--port", type=int, default=2002)

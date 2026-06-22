@@ -51,7 +51,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default="localhost")
     parser.add_argument("--port", type=int, default=2002)
-    parser.add_argument("--module", default="writer", choices=("writer", "calc"),
+    parser.add_argument("--module", default="writer", choices=("writer", "calc", "impress"),
                         help="which application to discover (default: writer)")
     parser.add_argument("--tree", action="store_true",
                         help="also print every menu item, including submenu "

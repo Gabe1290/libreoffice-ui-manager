@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "application": "impress",
+  "profile": {
+    "name": "Complete Impress",
+    "description": "Restores the full LibreOffice Impress interface."
+  },
+  "menus": {
+    ".uno:PickList": true,
+    ".uno:EditMenu": true,
+    ".uno:ViewMenu": true,
+    ".uno:InsertMenu": true,
+    ".uno:FormatMenu": true,
+    ".uno:SlideMenu": true,
+    ".uno:SlideShowMenu": true,
+    ".uno:ToolsMenu": true,
+    ".uno:WindowList": true,
+    ".uno:HelpMenu": true
+  },
+  "addons": {},
+  "toolbars": {},
+  "sidebar": {}
+}

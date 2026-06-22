@@ -3,6 +3,31 @@
 All notable changes to LibreOffice UI Manager (LOUIM) are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.0] — 2026-06-20
+
+Adds **LibreOffice Impress** support alongside Writer and Calc.
+
+### Added
+
+- **Impress support** — the full Apply Engine works in Impress. The
+  **LibreOffice UI Manager** menu appears in Impress, and Apply / Restore / Save
+  Current Layout act on the active application.
+- Three bundled Impress starter templates: *Getting Started (Impress)*,
+  *Basic Presentation*, *Complete Impress*.
+- Templates may now target `"impress"`.
+
+### Changed
+
+- Sidebar context **groups** are handled: Impress and Draw share the
+  `DrawImpress` deck context, so hiding a deck from Impress rewrites that group
+  to `Draw` rather than dropping it — Draw's sidebar is left intact
+  (`Module.deck_group_subs`).
+
+### Notes
+
+- Verified live on a throwaway, isolated Impress instance (including the
+  DrawImpress group behavior); 76 offline unit tests pass.
+
 ## [2.0.0] — 2026-06-20
 
 Adds **LibreOffice Calc** support alongside Writer.

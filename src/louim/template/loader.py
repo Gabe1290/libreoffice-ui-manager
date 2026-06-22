@@ -7,7 +7,7 @@
 import json
 
 # Template "application" values LOUIM can apply (LibreOffice module keys).
-SUPPORTED_APPLICATIONS = ("writer", "calc")
+SUPPORTED_APPLICATIONS = ("writer", "calc", "impress")
 
 
 class TemplateError(ValueError):
