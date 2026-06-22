@@ -63,6 +63,16 @@ _STRINGS = {
         "de": "LOUIM – ungültige Vorlage",
         "it": "LOUIM — modello non valido",
     },
+    "wrong_module_body": {
+        "en": ("This template is for %s, but the active document is %s.\n"
+               "Open a %s document and apply it there."),
+        "fr": ("Ce modèle est destiné à %s, mais le document actif est %s.\n"
+               "Ouvrez un document %s et appliquez-le là."),
+        "de": ("Diese Vorlage ist für %s, aber das aktive Dokument ist %s.\n"
+               "Öffnen Sie ein %s-Dokument und wenden Sie sie dort an."),
+        "it": ("Questo modello è per %s, ma il documento attivo è %s.\n"
+               "Apri un documento %s e applicalo lì."),
+    },
     "restore_body": {
         "en": ("Restored the full Writer interface.\n"
                "Reopen the document if the interface has not refreshed."),

@@ -1,26 +1,27 @@
-# LibreOffice UI Manager — Writer menu bar adapter.
+# LibreOffice UI Manager — menu bar adapter.
 #
-# This is part of the Writer provider: the only place (besides the future
-# Apply Engine) that talks to LibreOffice directly. It implements dynamic
-# discovery (design principle #5) by reading the live Writer menu bar from
-# LibreOffice's UI configuration, identifying every menu by its UNO command
-# ID rather than its localized label.
+# Despite living under ``writer/`` (historical) this is the generic menu-bar
+# engine: every function takes a ``module`` descriptor (default Writer) so the
+# same code drives Writer, Calc, and later Impress/Draw. It reads the live menu
+# bar from LibreOffice's UI configuration, identifying every menu by its UNO
+# command ID rather than its localized label.
 #
 # The functions take a UNO component context so they work both inside the
 # extension (pass XSCRIPTCONTEXT.getComponentContext()) and from an external
 # socket connection (used by the headless discovery tool / tests).
 
-WRITER_MODULE = "com.sun.star.text.TextDocument"
+from louim.adapters.modules import WRITER
+
 MENUBAR_RESOURCE = "private:resource/menubar/menubar"
 
 
-def _module_ui_config(ctx):
-    """Return the module-level UI configuration manager for Writer."""
+def _module_ui_config(ctx, module=WRITER):
+    """Return the module-level UI configuration manager for ``module``."""
     smgr = ctx.getServiceManager()
     supplier = smgr.createInstanceWithContext(
         "com.sun.star.ui.ModuleUIConfigurationManagerSupplier", ctx
     )
-    return supplier.getUIConfigurationManager(WRITER_MODULE)
+    return supplier.getUIConfigurationManager(module.doc_service)
 
 
 def _props_to_dict(props):
@@ -28,8 +29,8 @@ def _props_to_dict(props):
     return {p.Name: p.Value for p in props}
 
 
-def _command_labels(ctx):
-    """Return an XNameAccess mapping command URL -> label info for Writer.
+def _command_labels(ctx, module=WRITER):
+    """Return an XNameAccess mapping command URL -> label info for ``module``.
 
     The menu-bar UI config stores command IDs but usually leaves ``Label`` empty
     (LibreOffice resolves the visible text from the command at display time, and
@@ -41,7 +42,7 @@ def _command_labels(ctx):
         desc = ctx.getServiceManager().createInstanceWithContext(
             "com.sun.star.frame.UICommandDescription", ctx
         )
-        return desc.getByName(WRITER_MODULE)
+        return desc.getByName(module.doc_service)
     except Exception:  # noqa: BLE001
         return None
 
@@ -63,19 +64,18 @@ def _label_for(command, entry_label, command_labels):
     return label.replace("~", "")
 
 
-def discover_top_level_menus(ctx):
-    """Discover Writer's top-level menus.
+def discover_top_level_menus(ctx, module=WRITER):
+    """Discover the module's top-level menus.
 
     Returns a list of dicts in menu-bar order, each:
-        {"command": ".uno:FileMenu", "label": "~File"}
+        {"command": ".uno:FileMenu", "label": "File"}
 
-    The command is the language-independent UNO ID; the label is whatever the
-    current LibreOffice locale produced (kept only for display, never stored
-    in a .louim template).
+    The command is the language-independent UNO ID; the label is for display
+    only and is never stored in a .louim template.
     """
-    ui_cfg = _module_ui_config(ctx)
+    ui_cfg = _module_ui_config(ctx, module)
     menubar = ui_cfg.getSettings(MENUBAR_RESOURCE, False)
-    command_labels = _command_labels(ctx)
+    command_labels = _command_labels(ctx, module)
 
     menus = []
     for i in range(menubar.getCount()):
@@ -110,21 +110,20 @@ def _walk_items(container, path, items, command_labels):
     return items
 
 
-def discover_menu_items(ctx):
-    """Discover every Writer menu entry, including nested submenu items.
+def discover_menu_items(ctx, module=WRITER):
+    """Discover every menu entry, including nested submenu items.
 
     Returns a flat list in menu order, each:
         {"command": ".uno:InsertPagebreak", "label": "...",
          "path": [".uno:InsertMenu"], "depth": 1}
 
-    ``path`` is the chain of parent menu commands, so a teacher can see where a
-    command lives. Separators are skipped. The list is read from the factory
-    default, so it shows the full menu tree regardless of any current
-    customization — useful for finding the UNO IDs of individual items to hide in
-    a template's "menus" section.
+    ``path`` is the chain of parent menu commands. Separators are skipped. The
+    list is read from the factory default, so it shows the full menu tree
+    regardless of any current customization — useful for finding the UNO IDs of
+    individual items to hide in a template's "menus" section.
     """
-    default = _module_ui_config(ctx).getDefaultSettings(MENUBAR_RESOURCE)
-    return _walk_items(default, [], [], _command_labels(ctx))
+    default = _module_ui_config(ctx, module).getDefaultSettings(MENUBAR_RESOURCE)
+    return _walk_items(default, [], [], _command_labels(ctx, module))
 
 
 def _collect_command_set(container, out):
@@ -178,7 +177,7 @@ def _collect_descendants(container, targets, inside, out):
     return out
 
 
-def menu_command_descendants(ctx, menu_commands):
+def menu_command_descendants(ctx, menu_commands, module=WRITER):
     """Return every command nested inside the given menus (factory default tree).
 
     For each command in ``menu_commands`` that is a menu (has a submenu), returns
@@ -186,11 +185,11 @@ def menu_command_descendants(ctx, menu_commands):
     not included). Hiding a top-level menu can then also hide the *toolbar*
     buttons for the features that lived in that menu.
     """
-    default = _module_ui_config(ctx).getDefaultSettings(MENUBAR_RESOURCE)
+    default = _module_ui_config(ctx, module).getDefaultSettings(MENUBAR_RESOURCE)
     return _collect_descendants(default, set(menu_commands), False, set())
 
 
-def menu_visibility(ctx):
+def menu_visibility(ctx, module=WRITER):
     """Snapshot the current menu state for export, including submenu items.
 
     Returns a dict mapping UNO command IDs to booleans in the shape a .louim
@@ -203,7 +202,7 @@ def menu_visibility(ctx):
     Unlisted commands stay visible on apply, so the result reproduces the current
     (possibly hand-customized) menus exactly, item by item.
     """
-    ui_cfg = _module_ui_config(ctx)
+    ui_cfg = _module_ui_config(ctx, module)
     default = ui_cfg.getDefaultSettings(MENUBAR_RESOURCE)
     current_cmds = _collect_command_set(
         ui_cfg.getSettings(MENUBAR_RESOURCE, False), set()
@@ -234,8 +233,8 @@ def _prune_hidden(container, menus, hidden):
         container.removeByIndex(i)
 
 
-def apply_menu_profile(ctx, menus):
-    """Apply a menu visibility profile to Writer's menus.
+def apply_menu_profile(ctx, menus, module=WRITER):
+    """Apply a menu visibility profile to the module's menus.
 
     ``menus`` maps UNO command IDs to booleans (True = visible, False = hidden),
     as produced by a .louim template. Any command marked False is removed —
@@ -248,7 +247,7 @@ def apply_menu_profile(ctx, menus):
     level-2. Returns the list of command IDs that were hidden. The change
     persists in the user's profile until ``restore_default_menus``.
     """
-    ui_cfg = _module_ui_config(ctx)
+    ui_cfg = _module_ui_config(ctx, module)
 
     # Non-cumulative: drop any prior customization so we start from the factory
     # default. getSettings(..., True) then yields a writable clone of the full
@@ -272,14 +271,14 @@ def apply_menu_profile(ctx, menus):
     return hidden
 
 
-def restore_default_menus(ctx, _ui_cfg=None):
-    """Restore Writer's factory-default menu bar.
+def restore_default_menus(ctx, module=WRITER):
+    """Restore the module's factory-default menu bar.
 
     Removes any LOUIM (or other) menu-bar customization from the user profile,
-    so Writer falls back to its built-in full menu bar. Returns True if a
-    customization was removed, False if there was nothing to restore.
+    so the application falls back to its built-in full menu bar. Returns True if
+    a customization was removed, False if there was nothing to restore.
     """
-    ui_cfg = _ui_cfg or _module_ui_config(ctx)
+    ui_cfg = _module_ui_config(ctx, module)
     if not ui_cfg.hasSettings(MENUBAR_RESOURCE):
         return False
     ui_cfg.removeSettings(MENUBAR_RESOURCE)

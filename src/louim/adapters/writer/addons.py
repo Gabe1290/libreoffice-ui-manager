@@ -1,4 +1,4 @@
-# LibreOffice UI Manager — Writer addon-menu adapter.
+# LibreOffice UI Manager — addon-menu adapter (module-parameterized).
 #
 # Extension-contributed menus (e.g. Dmaths, and LOUIM's own menu) are NOT part
 # of the built-in menu bar managed by menubar.py. They are merged in separately
@@ -8,38 +8,23 @@
 #
 # Each addon menu has a ``Context`` property: a comma-separated list of document
 # service names where the menu appears. An empty Context means "all modules".
-# To hide an addon menu from Writer we remove the Writer services from its
+# To hide an addon menu from a module we remove that module's services from its
 # Context (a user-level config override); to restore it we write the saved
-# original Context back. The change takes effect for newly opened Writer windows.
+# original Context back. The change takes effect for newly opened windows.
 
 import json
 import os
 
 import uno
 
+from louim.adapters.modules import WRITER
+
 ADDONS_NODE = "/org.openoffice.Office.Addons/AddonUI/OfficeMenuBar"
-
-# Document services that mean "this menu shows in Writer".
-WRITER_CONTEXTS = (
-    "com.sun.star.text.TextDocument",
-    "com.sun.star.text.WebDocument",
-    "com.sun.star.text.GlobalDocument",
-)
-
-# When an addon is Writer-only and we remove Writer, an empty Context would mean
-# "all modules" (the opposite of hiding). So fall back to the non-Writer modules,
-# keeping the addon available everywhere except Writer.
-NON_WRITER_CONTEXTS = (
-    "com.sun.star.sheet.SpreadsheetDocument",
-    "com.sun.star.presentation.PresentationDocument",
-    "com.sun.star.drawing.DrawingDocument",
-    "com.sun.star.formula.FormulaProperties",
-)
 
 # LOUIM's own menu — never hide it, it is the user's control surface.
 LOUIM_OWN_NODE = "org.louim.libreoffice-ui-manager.menu"
 
-STATE_FILENAME = "louim-addon-state.json"
+_STATE_FILENAME = "louim-addon-state-%s.json"
 
 
 def _config_provider(ctx):
@@ -77,21 +62,21 @@ def _split(context):
     return [c.strip() for c in context.split(",") if c.strip()]
 
 
-def _shows_in_writer(context):
-    """True if an addon with this Context appears in Writer."""
+def _shows_in_module(context, module):
+    """True if an addon with this Context appears in ``module``."""
     if not context or not context.strip():
         return True  # empty Context = all modules
     parts = _split(context)
-    return any(w in parts for w in WRITER_CONTEXTS)
+    return any(c in parts for c in module.addon_contexts)
 
 
-def state_path(ctx):
-    """Absolute path of the LOUIM addon-state file in the user profile."""
+def state_path(ctx, module=WRITER):
+    """Absolute path of the LOUIM addon-state file for ``module``."""
     ps = ctx.getServiceManager().createInstanceWithContext(
         "com.sun.star.util.PathSubstitution", ctx
     )
     user_dir = uno.fileUrlToSystemPath(ps.getSubstituteVariableValue("$(user)"))
-    return os.path.join(user_dir, STATE_FILENAME)
+    return os.path.join(user_dir, _STATE_FILENAME % module.key)
 
 
 def _load_state(path):
@@ -110,8 +95,8 @@ def _save_state(path, state):
         os.remove(path)
 
 
-def discover_addon_menus(ctx):
-    """Discover extension-contributed top-level menus visible in Writer.
+def discover_addon_menus(ctx, module=WRITER):
+    """Discover extension-contributed top-level menus visible in ``module``.
 
     Returns a list of dicts in config order, each:
         {"node": "org.openoffice.Office.addon.aide", "title": "Dmaths"}
@@ -130,25 +115,24 @@ def discover_addon_menus(ctx):
         entry = access.getByName(node)
         try:
             context = entry.getByName("Context")
-        except Exception:
+        except Exception:  # noqa: BLE001
             context = ""
-        if not _shows_in_writer(context or ""):
+        if not _shows_in_module(context or "", module):
             continue
         try:
             title = entry.getByName("Title")
-        except Exception:
+        except Exception:  # noqa: BLE001
             title = node
         menus.append({"node": node, "title": title})
     return menus
 
 
-def addon_visibility(ctx):
-    """Snapshot whether each extension menu is currently shown in Writer.
+def addon_visibility(ctx, module=WRITER):
+    """Snapshot whether each extension menu currently shows in ``module``.
 
-    Returns a dict mapping addon node name to a bool (True = shows in Writer).
-    Both currently-shown and currently-hidden addons are included, so this is a
-    faithful basis for exporting the current interface as a template. LOUIM's own
-    menu is excluded.
+    Returns a dict mapping addon node name to a bool. Both shown and hidden
+    addons are included, for exporting the current interface. LOUIM's own menu is
+    excluded.
     """
     provider = _config_provider(ctx)
     access = _read_access(provider, ADDONS_NODE)
@@ -161,7 +145,7 @@ def addon_visibility(ctx):
             context = access.getByName(node).getByName("Context")
         except Exception:  # noqa: BLE001
             context = ""
-        snapshot[node] = _shows_in_writer(context or "")
+        snapshot[node] = _shows_in_module(context or "", module)
     return snapshot
 
 
@@ -175,8 +159,8 @@ def _set_context(provider, node, value):
     upd.commitChanges()
 
 
-def apply_addon_profile(ctx, addons, path=None):
-    """Hide/show extension menus in Writer per an "addons" profile.
+def apply_addon_profile(ctx, addons, module=WRITER, path=None):
+    """Hide/show extension menus in ``module`` per an "addons" profile.
 
     ``addons`` maps addon node names to booleans (True = visible, False =
     hidden). Nodes not mentioned are left untouched. Returns the list of node
@@ -185,7 +169,7 @@ def apply_addon_profile(ctx, addons, path=None):
     Original Context values are saved to the state file before the first change
     so the exact pre-LOUIM state can be restored later, even across restarts.
     """
-    path = path or state_path(ctx)
+    path = path or state_path(ctx, module)
     provider = _config_provider(ctx)
     state = _load_state(path)
 
@@ -195,15 +179,17 @@ def apply_addon_profile(ctx, addons, path=None):
             continue
         try:
             current = _context_of(provider, node)
-        except Exception:
+        except Exception:  # noqa: BLE001
             continue  # unknown node, skip
 
         if visible is False:
-            if _shows_in_writer(current):
+            if _shows_in_module(current, module):
                 if node not in state:
                     state[node] = current  # remember the original
-                remaining = [c for c in _split(current) if c not in WRITER_CONTEXTS]
-                new = ",".join(remaining) if remaining else ",".join(NON_WRITER_CONTEXTS)
+                remaining = [c for c in _split(current)
+                             if c not in module.addon_contexts]
+                new = ",".join(remaining) if remaining \
+                    else ",".join(module.other_addon_contexts)
                 _set_context(provider, node, new)
             hidden.append(node)
         else:
@@ -215,12 +201,12 @@ def apply_addon_profile(ctx, addons, path=None):
     return hidden
 
 
-def restore_addon_menus(ctx, path=None):
+def restore_addon_menus(ctx, module=WRITER, path=None):
     """Restore every addon menu LOUIM hid to its original Context.
 
     Returns the list of node names restored.
     """
-    path = path or state_path(ctx)
+    path = path or state_path(ctx, module)
     provider = _config_provider(ctx)
     state = _load_state(path)
 
@@ -229,7 +215,7 @@ def restore_addon_menus(ctx, path=None):
         try:
             _set_context(provider, node, original)
             restored.append(node)
-        except Exception:
+        except Exception:  # noqa: BLE001
             pass
     _save_state(path, {})
     return restored

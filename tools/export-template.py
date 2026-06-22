@@ -24,6 +24,7 @@ import uno  # noqa: E402
 
 from louim.template.saver import build_current_template, save_template  # noqa: E402
 from louim.template.loader import load_template  # noqa: E402
+from louim.adapters.modules import get_module  # noqa: E402
 
 
 def connect(host, port):
@@ -42,6 +43,8 @@ def main():
     parser.add_argument("--name", default=None,
                         help="profile name (defaults to the output file stem)")
     parser.add_argument("--description", default="")
+    parser.add_argument("--module", default="writer", choices=("writer", "calc"),
+                        help="application to snapshot (default: writer)")
     parser.add_argument("--host", default="localhost")
     parser.add_argument("--port", type=int, default=2002)
     args = parser.parse_args()
@@ -54,7 +57,8 @@ def main():
         return 1
 
     name = args.name or Path(args.output).stem
-    template = build_current_template(ctx, name=name, description=args.description)
+    template = build_current_template(ctx, name=name, description=args.description,
+                                      module=get_module(args.module))
     save_template(args.output, template)
 
     # Round-trip through the loader as a sanity check.

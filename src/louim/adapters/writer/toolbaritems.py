@@ -16,12 +16,13 @@
 import json
 import os
 
+from louim.adapters.modules import WRITER
 from louim.adapters.writer.menubar import (
     _module_ui_config, _props_to_dict, _prune_hidden,
 )
 from louim.adapters.writer.toolbars import discover_toolbars
 
-STATE_FILENAME = "louim-toolbaritem-state.json"
+_STATE_FILENAME = "louim-toolbaritem-state-%s.json"
 
 
 def hidden_commands_for(template):
@@ -40,7 +41,7 @@ def hidden_commands_for(template):
     return hidden
 
 
-def hidden_toolbar_commands(ctx, template):
+def hidden_toolbar_commands(ctx, template, module=WRITER):
     """The full set of commands whose toolbar buttons a template hides.
 
     Starts from ``hidden_commands_for`` (explicit ``toolbaritems`` plus, when the
@@ -56,7 +57,7 @@ def hidden_toolbar_commands(ctx, template):
         from louim.adapters.writer.menubar import menu_command_descendants
         menus_hidden = {c for c, v in template.get("menus", {}).items()
                         if v is False}
-        hidden |= menu_command_descendants(ctx, menus_hidden)
+        hidden |= menu_command_descendants(ctx, menus_hidden, module)
     return hidden
 
 
@@ -73,13 +74,13 @@ def _collect_commands(container, out):
     return out
 
 
-def _state_path(ctx):
+def _state_path(ctx, module=WRITER):
     import uno
     ps = ctx.getServiceManager().createInstanceWithContext(
         "com.sun.star.util.PathSubstitution", ctx
     )
     user_dir = uno.fileUrlToSystemPath(ps.getSubstituteVariableValue("$(user)"))
-    return os.path.join(user_dir, STATE_FILENAME)
+    return os.path.join(user_dir, _STATE_FILENAME % module.key)
 
 
 def _load_state(path):
@@ -98,8 +99,8 @@ def _save_state(path, resources):
         os.remove(path)
 
 
-def _toolbar_resources(ctx):
-    return [t["resource"] for t in discover_toolbars(ctx)]
+def _toolbar_resources(ctx, module=WRITER):
+    return [t["resource"] for t in discover_toolbars(ctx, module)]
 
 
 def _visible_commands(container, out):
@@ -121,7 +122,7 @@ def _visible_commands(container, out):
     return out
 
 
-def toolbar_item_visibility(ctx):
+def toolbar_item_visibility(ctx, module=WRITER):
     """Snapshot toolbar buttons a teacher has hidden, as {command: False}.
 
     For every toolbar, records each command that is visible in the factory
@@ -131,9 +132,9 @@ def toolbar_item_visibility(ctx):
     toolbar buttons. Buttons still shown are omitted (they default to visible on
     apply).
     """
-    ui_cfg = _module_ui_config(ctx)
+    ui_cfg = _module_ui_config(ctx, module)
     hidden = {}
-    for resource in _toolbar_resources(ctx):
+    for resource in _toolbar_resources(ctx, module):
         try:
             default = ui_cfg.getDefaultSettings(resource)
         except Exception:  # noqa: BLE001 — toolbar without a factory default
@@ -152,7 +153,7 @@ def toolbar_item_visibility(ctx):
     return hidden
 
 
-def apply_toolbar_items(ctx, hidden_commands, path=None):
+def apply_toolbar_items(ctx, hidden_commands, module=WRITER, path=None):
     """Hide individual toolbar buttons for the given command IDs.
 
     ``hidden_commands`` is a set/iterable of UNO command IDs whose buttons should
@@ -168,9 +169,9 @@ def apply_toolbar_items(ctx, hidden_commands, path=None):
     to a known state and restores removed icons.
     """
     hidden_commands = set(hidden_commands)
-    path = path or _state_path(ctx)
-    ui_cfg = _module_ui_config(ctx)
-    resources = _toolbar_resources(ctx)
+    path = path or _state_path(ctx, module)
+    ui_cfg = _module_ui_config(ctx, module)
+    resources = _toolbar_resources(ctx, module)
 
     # Reset EVERY customized toolbar to its factory definition first.
     for resource in resources:
@@ -199,18 +200,18 @@ def apply_toolbar_items(ctx, hidden_commands, path=None):
     return modified
 
 
-def restore_toolbar_items(ctx, path=None):
+def restore_toolbar_items(ctx, module=WRITER, path=None):
     """Reset every customized toolbar to its factory definition.
 
     Returns the list of resource URLs restored. Like ``restore_default_menus``,
     this returns the toolbars to the full built-in set, undoing both LOUIM's
     pruning and any hand customization.
     """
-    path = path or _state_path(ctx)
-    ui_cfg = _module_ui_config(ctx)
+    path = path or _state_path(ctx, module)
+    ui_cfg = _module_ui_config(ctx, module)
 
     restored = []
-    for resource in _toolbar_resources(ctx):
+    for resource in _toolbar_resources(ctx, module):
         if ui_cfg.hasSettings(resource):
             ui_cfg.removeSettings(resource)
             restored.append(resource)

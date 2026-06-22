@@ -32,6 +32,7 @@ from louim.adapters.writer.menubar import (  # noqa: E402
 from louim.adapters.writer.addons import discover_addon_menus  # noqa: E402
 from louim.adapters.writer.toolbars import discover_toolbars  # noqa: E402
 from louim.adapters.writer.sidebar import discover_sidebar_decks  # noqa: E402
+from louim.adapters.modules import get_module  # noqa: E402
 
 
 def connect(host, port):
@@ -50,11 +51,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default="localhost")
     parser.add_argument("--port", type=int, default=2002)
+    parser.add_argument("--module", default="writer", choices=("writer", "calc"),
+                        help="which application to discover (default: writer)")
     parser.add_argument("--tree", action="store_true",
                         help="also print every menu item, including submenu "
                              "items, with their UNO IDs (for hiding individual "
                              "entries in a template)")
     args = parser.parse_args()
+    module = get_module(args.module)
 
     try:
         ctx = connect(args.host, args.port)
@@ -65,28 +69,28 @@ def main():
         print("Error:", exc)
         return 1
 
-    menus = discover_top_level_menus(ctx)
-    print("Discovered %d built-in Writer menus:" % len(menus))
+    menus = discover_top_level_menus(ctx, module)
+    print("Discovered %d built-in %s menus:" % (len(menus), args.module))
     for menu in menus:
         print("  %-24s %s" % (menu["command"], menu["label"]))
 
-    addons = discover_addon_menus(ctx)
-    print("\nDiscovered %d extension menu(s) in Writer:" % len(addons))
+    addons = discover_addon_menus(ctx, module)
+    print("\nDiscovered %d extension menu(s) in %s:" % (len(addons), args.module))
     for addon in addons:
         print("  %-45s %s" % (addon["node"], addon["title"]))
 
-    toolbars = discover_toolbars(ctx)
-    print("\nDiscovered %d Writer toolbar(s):" % len(toolbars))
+    toolbars = discover_toolbars(ctx, module)
+    print("\nDiscovered %d %s toolbar(s):" % (len(toolbars), args.module))
     for toolbar in toolbars:
         print("  %-45s %s" % (toolbar["resource"], toolbar["label"]))
 
-    decks = discover_sidebar_decks(ctx)
-    print("\nDiscovered %d Writer sidebar deck(s):" % len(decks))
+    decks = discover_sidebar_decks(ctx, module)
+    print("\nDiscovered %d %s sidebar deck(s):" % (len(decks), args.module))
     for deck in decks:
         print("  %-24s %s" % (deck["deck"], deck["title"]))
 
     if args.tree:
-        items = discover_menu_items(ctx)
+        items = discover_menu_items(ctx, module)
         print("\nFull menu tree (%d command items):" % len(items))
         for item in items:
             indent = "  " * (item["depth"] + 1)

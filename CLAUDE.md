@@ -68,7 +68,17 @@ process serves them all). Read before doing any live verification.
 
 ## How the engine is structured
 
-The only code that talks to LibreOffice lives in `src/louim/adapters/writer/`:
+The engine is **module-parameterized**: `src/louim/adapters/modules.py` defines a
+`Module` descriptor (document service, window-state node, sidebar app names, addon
+contexts) with `WRITER` and `CALC` instances. Every adapter function takes a
+`module` argument (default `WRITER`), so one code path drives both apps — adding
+Impress/Draw is a new `Module` plus templates, not new adapters. State files are
+per-module (`louim-*-state-<app>.json`). The extension routes apply/restore/export
+by the active document (`module_for_document`); a template's `application` field
+must match the app you are in.
+
+The code that talks to LibreOffice lives in `src/louim/adapters/writer/` (the
+package name is historical — the modules are generic):
 
 - `menubar.py` — top-level menus **and** nested menu items. Apply is
   non-cumulative: it resets to the factory menu bar, then recursively removes

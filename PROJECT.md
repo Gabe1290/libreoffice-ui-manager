@@ -10,13 +10,16 @@ LOUIM is not primarily a lockdown tool. It is a learning tool.
 
 ## Current Milestone
 
-**Version 1.0.0 — Stable Writer Release (shipped 2026-06-20).**
+**Version 2.0.0 — Calc (2026-06-20).**
 
-Milestones 0.1–0.7 are complete and verified: discovery, template
-load/save/export, and the Apply Engine across menus, submenu items, toolbars,
-toolbar buttons, sidebar decks, and extension menus — plus en/fr/de/it
-localization. See CHANGELOG.md. Next horizons are Calc (2.0), Impress (3.0),
-Draw (4.0).
+LOUIM now drives **Writer and Calc** from one module-parameterized engine
+(`src/louim/adapters/modules.py`): a `Module` descriptor carries the per-app
+identifiers (document service, window-state node, sidebar app names, addon
+contexts), and every adapter function takes a `module` (default Writer). The
+extension routes apply/restore/export by the active document. Calc starter
+templates ship alongside the Writer ones. Verified on throwaway Writer and Calc
+instances; 71 unit tests pass. Next horizons: Impress (3.0), Draw (4.0) — each a
+new `Module` plus templates.
 
 ## Resolved
 

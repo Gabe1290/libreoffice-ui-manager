@@ -3,6 +3,36 @@
 All notable changes to LibreOffice UI Manager (LOUIM) are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.0.0] — 2026-06-20
+
+Adds **LibreOffice Calc** support alongside Writer.
+
+### Added
+
+- **Calc support** — the full Apply Engine (menus, menu items, toolbars, toolbar
+  buttons, sidebar decks, extension menus, and export) now works in Calc. The
+  **LibreOffice UI Manager** menu appears in Calc, and Apply / Restore / Save
+  Current Layout act on whichever application you are in.
+- Three bundled Calc starter templates: *Getting Started (Calc)*,
+  *Basic Spreadsheet*, *Complete Calc*.
+- A template's `application` field selects the target app (`writer` or `calc`);
+  applying a template whose application does not match the active document is
+  refused with a clear message.
+
+### Changed
+
+- The engine is now **module-parameterized** (`adapters/modules.py`): one code
+  path drives every application, so Impress and Draw can follow the same pattern.
+- LOUIM state files are now per-application (e.g. `louim-toolbar-state-writer.json`,
+  `louim-toolbar-state-calc.json`), so Writer and Calc profiles never collide.
+- Dev tools (`discover-menus.py`, `apply-template.py`, `export-template.py`) take
+  a `--module writer|calc` option.
+
+### Notes
+
+- Verified live on throwaway, isolated Writer and Calc instances (never a user's
+  working profile); 71 offline unit tests pass.
+
 ## [1.0.0] — 2026-06-20
 
 First stable release. A complete, verified Apply Engine for **LibreOffice

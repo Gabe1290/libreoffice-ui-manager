@@ -1,41 +1,38 @@
-# LibreOffice UI Manager — Writer toolbar adapter.
+# LibreOffice UI Manager — toolbar visibility adapter (module-parameterized).
 #
 # Toolbars are not part of the menu bar resource managed by menubar.py. Their
-# persistent visibility lives in the module window-state configuration
-#
-#     org.openoffice.Office.UI.WriterWindowState / UIElements / States
-#
-# which is a configuration *set* keyed by toolbar resource URL (for example
+# persistent visibility lives in each application's window-state configuration
+# (``org.openoffice.Office.UI.<Module>WindowState / UIElements / States``), a
+# configuration *set* keyed by toolbar resource URL (e.g.
 # ``private:resource/toolbar/standardbar``). Each element carries a ``Visible``
-# boolean (plus docking/position state). Toggling a toolbar via View > Toolbars
+# boolean (plus docking/position state); toggling a toolbar via View ▸ Toolbars
 # writes here, which is why the change survives a restart.
 #
 # To hide a toolbar we set ``Visible = false`` on its state element, creating the
-# element if Writer has never persisted one. To restore we put back exactly what
-# was there before — including *removing* an element we had to create — using a
+# element if none was persisted. To restore we put back exactly what was there
+# before — including *removing* an element we had to create — using a per-module
 # state file in the user profile, mirroring addons.py. Changes take effect for
-# newly opened Writer windows.
+# newly opened windows.
 
 import json
 import os
 
+from louim.adapters.modules import WRITER
+from louim.adapters.writer.menubar import _module_ui_config, _props_to_dict
+
 # ``uno`` is imported lazily inside the few helpers that need it, so this module
-# (and its pure helpers like ``curate_toolbars``) imports without LibreOffice and
-# is unit-tested in CI.
+# (and pure helpers like ``curate_toolbars``) imports without LibreOffice.
 
-# The window-state set for Writer toolbars.
-WINDOWSTATE_NODE = "/org.openoffice.Office.UI.WriterWindowState/UIElements/States"
-
-# Resource-URL prefix that identifies a toolbar (as opposed to a statusbar,
-# menubar, etc.) in the window-state set.
+# Resource-URL prefix that identifies a toolbar (vs a statusbar, menubar, …).
 TOOLBAR_PREFIX = "private:resource/toolbar/"
 
-STATE_FILENAME = "louim-toolbar-state.json"
+_STATE_FILENAME = "louim-toolbar-state-%s.json"
 
-# The common, teacher-relevant Writer toolbars. A profile snapshot would
-# otherwise list every toolbar that has a window-state entry (~58), most of them
-# contextual noise; exporting only these (plus anything explicitly hidden) keeps
-# a saved template readable. All are real Writer toolbar resource URLs.
+# The common, teacher-relevant toolbars. A profile snapshot would otherwise list
+# every toolbar that has a window-state entry (~58), most of them contextual
+# noise; exporting only these (plus anything explicitly hidden) keeps a saved
+# template readable. Tuned for Writer; harmless elsewhere (non-matching names are
+# simply absent from another module's snapshot).
 CURATED_TOOLBARS = (
     TOOLBAR_PREFIX + "standardbar",
     TOOLBAR_PREFIX + "textobjectbar",
@@ -53,11 +50,9 @@ CURATED_TOOLBARS = (
 def curate_toolbars(snapshot):
     """Trim a toolbar visibility map for a readable exported template.
 
-    Keeps the common, teacher-relevant toolbars (``CURATED_TOOLBARS``) plus any
-    toolbar the snapshot marks hidden (``False``) — an explicit hide is an
-    intentional choice worth preserving even if the toolbar is not in the curated
-    set. Everything else (the dozens of contextual toolbars that merely happen to
-    have a window-state entry) is dropped. Pure function, unit-tested.
+    Keeps the common toolbars (``CURATED_TOOLBARS``) plus any toolbar the
+    snapshot marks hidden (``False``) — an explicit hide is intentional and worth
+    keeping even if not curated. Everything else is dropped. Pure, unit-tested.
     """
     return {
         resource: visible
@@ -93,27 +88,14 @@ def _update_access(provider, node):
     )
 
 
-def _module_ui_config(ctx):
-    """Return the module-level UI configuration manager for Writer."""
-    smgr = ctx.getServiceManager()
-    supplier = smgr.createInstanceWithContext(
-        "com.sun.star.ui.ModuleUIConfigurationManagerSupplier", ctx
-    )
-    return supplier.getUIConfigurationManager("com.sun.star.text.TextDocument")
-
-
-def _props_to_dict(props):
-    return {p.Name: p.Value for p in props}
-
-
-def state_path(ctx):
-    """Absolute path of the LOUIM toolbar-state file in the user profile."""
+def state_path(ctx, module=WRITER):
+    """Absolute path of the LOUIM toolbar-state file for ``module``."""
     ps = ctx.getServiceManager().createInstanceWithContext(
         "com.sun.star.util.PathSubstitution", ctx
     )
     import uno
     user_dir = uno.fileUrlToSystemPath(ps.getSubstituteVariableValue("$(user)"))
-    return os.path.join(user_dir, STATE_FILENAME)
+    return os.path.join(user_dir, _STATE_FILENAME % module.key)
 
 
 def _load_state(path):
@@ -132,19 +114,18 @@ def _save_state(path, state):
         os.remove(path)
 
 
-def discover_toolbars(ctx):
-    """Discover Writer's toolbars.
+def discover_toolbars(ctx, module=WRITER):
+    """Discover the module's toolbars.
 
     Returns a list of dicts in configuration order, each:
         {"resource": "private:resource/toolbar/standardbar", "label": "Standard"}
 
-    ``resource`` is the language-independent toolbar resource URL used as the key
-    in a .louim template's "toolbars" section; ``label`` (the toolbar's UIName)
-    is for display only and is never stored in a template.
+    ``resource`` is the language-independent toolbar resource URL; ``label`` is
+    for display only.
     """
     from com.sun.star.ui.UIElementType import TOOLBAR
 
-    ui_cfg = _module_ui_config(ctx)
+    ui_cfg = _module_ui_config(ctx, module)
     toolbars = []
     for info in ui_cfg.getUIElementsInfo(TOOLBAR):
         entry = _props_to_dict(info)
@@ -155,16 +136,14 @@ def discover_toolbars(ctx):
     return toolbars
 
 
-def toolbar_visibility(ctx):
-    """Snapshot the persisted visibility of Writer toolbars.
+def toolbar_visibility(ctx, module=WRITER):
+    """Snapshot the persisted visibility of the module's toolbars.
 
-    Returns a dict mapping toolbar resource URL to a bool (its current
-    window-state ``Visible`` value). Only toolbars that carry an explicit
-    window-state entry are included — those are exactly the ones the user (or
-    LOUIM) has turned on or off, which is what makes a meaningful exported
-    template. Toolbars left at their built-in default are omitted.
+    Returns a dict mapping toolbar resource URL to a bool (its window-state
+    ``Visible`` value). Only toolbars with an explicit window-state entry are
+    included — those the user (or LOUIM) has turned on or off.
     """
-    states = _read_access(_config_provider(ctx), WINDOWSTATE_NODE)
+    states = _read_access(_config_provider(ctx), module.windowstate_node)
     snapshot = {}
     for resource in states.getElementNames():
         if not resource.startswith(TOOLBAR_PREFIX):
@@ -176,14 +155,14 @@ def toolbar_visibility(ctx):
     return snapshot
 
 
-def _set_visible(provider, resource, visible):
+def _set_visible(provider, node, resource, visible):
     """Set a toolbar's persistent Visible flag, creating its state if needed.
 
     Returns the record needed to undo this change later: the original Visible
-    value if the element already existed, or None if we had to create it (so
-    restore knows to remove it again).
+    value if the element already existed, or that it did not exist (so restore
+    knows to remove it again).
     """
-    states = _update_access(provider, WINDOWSTATE_NODE)
+    states = _update_access(provider, node)
     if states.hasByName(resource):
         element = states.getByName(resource)
         try:
@@ -194,7 +173,6 @@ def _set_visible(provider, resource, visible):
         states.commitChanges()
         return {"existed": True, "visible": original}
 
-    # No persisted state yet: create one carrying just the Visible flag.
     element = states.createInstance()
     element.setPropertyValue("Visible", visible)
     states.insertByName(resource, element)
@@ -202,8 +180,8 @@ def _set_visible(provider, resource, visible):
     return {"existed": False}
 
 
-def _restore_one(provider, resource, record):
-    states = _update_access(provider, WINDOWSTATE_NODE)
+def _restore_one(provider, node, resource, record):
+    states = _update_access(provider, node)
     if record.get("existed"):
         if states.hasByName(resource):
             states.getByName(resource).setPropertyValue(
@@ -214,40 +192,29 @@ def _restore_one(provider, resource, record):
     states.commitChanges()
 
 
-def apply_toolbar_profile(ctx, toolbars, path=None):
-    """Show/hide whole toolbars in Writer per a "toolbars" profile.
+def apply_toolbar_profile(ctx, toolbars, module=WRITER, path=None):
+    """Show/hide whole toolbars per a "toolbars" profile.
 
-    ``toolbars`` maps toolbar resource URLs to booleans: ``True`` shows the
-    toolbar, ``False`` hides it (by setting its persistent ``Visible`` state in
-    Writer's window-state configuration). Resources not mentioned are left at
-    their pre-LOUIM state. Returns the list of resource URLs that were hidden.
+    ``toolbars`` maps toolbar resource URLs to booleans: ``True`` shows, ``False``
+    hides (via the persistent ``Visible`` state). Resources not mentioned are left
+    at their pre-LOUIM state. Returns the list of resource URLs hidden.
 
-    Applying is **non-cumulative**, exactly like the menu bar: every call first
-    rolls back any toolbar LOUIM changed on a previous apply, so the profile is
-    always interpreted against the user's own original toolbar layout. Applying
-    level-1 then writer-full therefore yields writer-full, not a leftover blend,
-    and an empty profile restores the user's defaults.
+    Non-cumulative, like the menu bar: every call first rolls back any toolbar
+    LOUIM changed on a previous apply, so the profile is interpreted against the
+    user's own layout and an empty profile restores the defaults.
 
-    The pre-LOUIM Visible state of each affected toolbar is saved to the state
-    file so ``restore_toolbars`` (and the rollback above) can reproduce it
-    exactly — even across restarts, and even for a toolbar LOUIM had to create a
-    window-state entry for.
-
-    Note: ``True`` genuinely forces a toolbar visible. That is what makes
-    "show the Drawing toolbar for beginners" work, but it means listing a
-    *contextual* toolbar (e.g. ``tableobjectbar``, shown only inside a table) as
-    ``True`` will pin it open. The bundled templates only manage ordinary
-    toggleable toolbars; hand-authored templates should do the same.
+    Note: ``True`` genuinely forces a toolbar visible, so do not list a contextual
+    toolbar as ``True`` or it is pinned open. The bundled templates only manage
+    ordinary toggleable toolbars.
     """
-    path = path or state_path(ctx)
+    node = module.windowstate_node
+    path = path or state_path(ctx, module)
     provider = _config_provider(ctx)
     state = _load_state(path)
 
-    # Roll back any previous LOUIM toolbar change so this profile is applied
-    # against the user's original layout (non-cumulative, like the menu bar).
     for resource, record in list(state.items()):
         try:
-            _restore_one(provider, resource, record)
+            _restore_one(provider, node, resource, record)
         except Exception:  # noqa: BLE001
             pass
     state = {}
@@ -257,9 +224,9 @@ def apply_toolbar_profile(ctx, toolbars, path=None):
         if not resource.startswith(TOOLBAR_PREFIX):
             continue  # only manage genuine toolbar resources
         try:
-            record = _set_visible(provider, resource, bool(visible))
+            record = _set_visible(provider, node, resource, bool(visible))
             if resource not in state:
-                state[resource] = record  # remember the original for restore
+                state[resource] = record
             if visible is False:
                 hidden.append(resource)
         except Exception:  # noqa: BLE001 — unknown/locked resource, skip it
@@ -269,19 +236,20 @@ def apply_toolbar_profile(ctx, toolbars, path=None):
     return hidden
 
 
-def restore_toolbars(ctx, path=None):
+def restore_toolbars(ctx, module=WRITER, path=None):
     """Restore every toolbar LOUIM hid to its original window state.
 
     Returns the list of resource URLs restored.
     """
-    path = path or state_path(ctx)
+    node = module.windowstate_node
+    path = path or state_path(ctx, module)
     provider = _config_provider(ctx)
     state = _load_state(path)
 
     restored = []
     for resource, record in list(state.items()):
         try:
-            _restore_one(provider, resource, record)
+            _restore_one(provider, node, resource, record)
             restored.append(resource)
         except Exception:  # noqa: BLE001
             pass

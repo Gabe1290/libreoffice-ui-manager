@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "application": "calc",
+  "profile": {
+    "name": "Getting Started (Calc)",
+    "description": "Very simple Calc interface for beginners."
+  },
+  "menus": {
+    ".uno:PickList": true,
+    ".uno:EditMenu": true,
+    ".uno:ViewMenu": false,
+    ".uno:InsertMenu": false,
+    ".uno:FormatMenu": true,
+    ".uno:FormatStylesMenu": false,
+    ".uno:SheetMenu": false,
+    ".uno:DataMenu": false,
+    ".uno:ToolsMenu": false,
+    ".uno:WindowList": false,
+    ".uno:HelpMenu": true
+  },
+  "addons": {},
+  "toolbars": {},
+  "sidebar": {},
+  "hide_toolbar_buttons_with_menus": true
+}

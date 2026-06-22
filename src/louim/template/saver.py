@@ -15,18 +15,19 @@ TEMPLATE_VERSION = 1
 
 
 def assemble_template(name, description, menus, addons=None, toolbars=None,
-                      sidebar=None, toolbaritems=None):
+                      sidebar=None, toolbaritems=None, application="writer"):
     """Build a template dict from a profile name and visibility maps.
 
     ``menus`` / ``addons`` / ``toolbars`` / ``sidebar`` / ``toolbaritems`` map
-    identifiers to booleans, as the discovery snapshots produce. The result is
-    the exact structure ``loader`` validates and the Apply Engine consumes.
-    Empty maps are dropped so an exported template only lists what differs from
-    the default.
+    identifiers to booleans, as the discovery snapshots produce. ``application``
+    is the module key ("writer"/"calc"). The result is the exact structure
+    ``loader`` validates and the Apply Engine consumes. Empty maps for the
+    optional sections are still emitted; ``toolbaritems`` is added only when
+    non-empty so an exported template stays concise.
     """
     template = {
         "version": TEMPLATE_VERSION,
-        "application": "writer",
+        "application": application,
         "profile": {
             "name": name or "Untitled",
             "description": description or "",
@@ -52,24 +53,28 @@ def save_template(path, template):
     return path
 
 
-def build_current_template(ctx, name, description=""):
-    """Snapshot Writer's current interface as a template dict.
+def build_current_template(ctx, name, description="", module=None):
+    """Snapshot the current interface of ``module`` (default Writer) as a template.
 
-    Reads the live visibility of the top-level menus, extension menus, and
-    toolbars and assembles a template a teacher can save and then tweak.
+    Reads the live visibility of the menus (item by item), extension menus,
+    toolbars, toolbar buttons, and sidebar decks and assembles a template a
+    teacher can save and then tweak.
     """
+    from louim.adapters.modules import WRITER
     from louim.adapters.writer.menubar import menu_visibility
     from louim.adapters.writer.addons import addon_visibility
     from louim.adapters.writer.toolbars import toolbar_visibility, curate_toolbars
     from louim.adapters.writer.toolbaritems import toolbar_item_visibility
     from louim.adapters.writer.sidebar import sidebar_visibility
 
+    module = module or WRITER
     return assemble_template(
         name,
         description,
-        menus=menu_visibility(ctx),
-        addons=addon_visibility(ctx),
-        toolbars=curate_toolbars(toolbar_visibility(ctx)),
-        sidebar=sidebar_visibility(ctx),
-        toolbaritems=toolbar_item_visibility(ctx),
+        menus=menu_visibility(ctx, module),
+        addons=addon_visibility(ctx, module),
+        toolbars=curate_toolbars(toolbar_visibility(ctx, module)),
+        sidebar=sidebar_visibility(ctx, module),
+        toolbaritems=toolbar_item_visibility(ctx, module),
+        application=module.key,
     )

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "application": "calc",
+  "profile": {
+    "name": "Basic Spreadsheet",
+    "description": "Calc interface for learners ready to use insert, view, and sheet features."
+  },
+  "menus": {
+    ".uno:PickList": true,
+    ".uno:EditMenu": true,
+    ".uno:ViewMenu": true,
+    ".uno:InsertMenu": true,
+    ".uno:FormatMenu": true,
+    ".uno:FormatStylesMenu": false,
+    ".uno:SheetMenu": true,
+    ".uno:DataMenu": false,
+    ".uno:ToolsMenu": false,
+    ".uno:WindowList": false,
+    ".uno:HelpMenu": true
+  },
+  "addons": {},
+  "toolbars": {},
+  "sidebar": {},
+  "hide_toolbar_buttons_with_menus": true
+}

@@ -70,6 +70,20 @@ def _translator(ctx):
         return translator("en")
 
 
+def _current_module(ctx):
+    """The LOUIM Module for the active document (Writer/Calc), or Writer.
+
+    Requires the bundled package on ``sys.path``. The LOUIM menu appears in each
+    supported application, so apply/restore/export act on whichever you are in.
+    """
+    from louim.adapters.modules import module_for_document, WRITER
+    try:
+        doc = XSCRIPTCONTEXT.getDesktop().getCurrentComponent()
+        return module_for_document(doc) or WRITER
+    except Exception:  # noqa: BLE001
+        return WRITER
+
+
 def _message_box(ctx, title, message):
     """Show a simple OK info box parented to the current document window."""
     from com.sun.star.awt.MessageBoxType import INFOBOX
@@ -156,11 +170,12 @@ def _pick_save_path(ctx, t):
 
 
 def apply_template(*args):
-    """Pick a .louim template and apply its menu profile to Writer."""
+    """Pick a .louim template and apply its profile to the active application."""
     ctx = XSCRIPTCONTEXT.getComponentContext()
     try:
         _ensure_package_path(ctx)
         t = _translator(ctx)
+        module = _current_module(ctx)
         from louim.template.loader import load_template, TemplateError
         from louim.adapters.writer.menubar import apply_menu_profile
         from louim.adapters.writer.addons import apply_addon_profile
@@ -180,11 +195,22 @@ def apply_template(*args):
             _message_box(ctx, t("invalid_title"), str(exc))
             return
 
-        hidden = apply_menu_profile(ctx, template.get("menus", {}))
-        hidden_addons = apply_addon_profile(ctx, template.get("addons", {}))
-        hidden_toolbars = apply_toolbar_profile(ctx, template.get("toolbars", {}))
-        apply_toolbar_items(ctx, hidden_toolbar_commands(ctx, template))
-        hidden_decks = apply_sidebar_profile(ctx, template.get("sidebar", {}))
+        # The template must target the application you are in.
+        if template.get("application") != module.key:
+            _message_box(ctx, t("invalid_title"),
+                         t("wrong_module_body",
+                           str(template.get("application")).capitalize(),
+                           module.key.capitalize(), module.key.capitalize()))
+            return
+
+        hidden = apply_menu_profile(ctx, template.get("menus", {}), module)
+        hidden_addons = apply_addon_profile(ctx, template.get("addons", {}), module)
+        hidden_toolbars = apply_toolbar_profile(
+            ctx, template.get("toolbars", {}), module)
+        apply_toolbar_items(ctx, hidden_toolbar_commands(ctx, template, module),
+                            module)
+        hidden_decks = apply_sidebar_profile(
+            ctx, template.get("sidebar", {}), module)
         name = template.get("profile", {}).get("name") or os.path.basename(path)
         _message_box(
             ctx,
@@ -197,33 +223,35 @@ def apply_template(*args):
 
 
 def restore_menus(*args):
-    """Restore Writer's full menu bar and any hidden extension menus."""
+    """Restore the active application's full menus, toolbars, and sidebar."""
     ctx = XSCRIPTCONTEXT.getComponentContext()
     try:
         _ensure_package_path(ctx)
         t = _translator(ctx)
+        module = _current_module(ctx)
         from louim.adapters.writer.menubar import restore_default_menus
         from louim.adapters.writer.addons import restore_addon_menus
         from louim.adapters.writer.toolbars import restore_toolbars
         from louim.adapters.writer.toolbaritems import restore_toolbar_items
         from louim.adapters.writer.sidebar import restore_sidebar_decks
 
-        restore_default_menus(ctx)
-        restore_addon_menus(ctx)
-        restore_toolbars(ctx)
-        restore_toolbar_items(ctx)
-        restore_sidebar_decks(ctx)
+        restore_default_menus(ctx, module)
+        restore_addon_menus(ctx, module)
+        restore_toolbars(ctx, module)
+        restore_toolbar_items(ctx, module)
+        restore_sidebar_decks(ctx, module)
         _message_box(ctx, t("product"), t("restore_body"))
     except Exception as exc:  # noqa: BLE001
         _error_box(ctx, exc)
 
 
 def export_template(*args):
-    """Snapshot Writer's current interface and save it as a .louim template."""
+    """Snapshot the active application's interface and save it as a template."""
     ctx = XSCRIPTCONTEXT.getComponentContext()
     try:
         _ensure_package_path(ctx)
         t = _translator(ctx)
+        module = _current_module(ctx)
         from louim.template.saver import build_current_template, save_template
 
         path = _pick_save_path(ctx, t)
@@ -231,7 +259,7 @@ def export_template(*args):
             return  # user cancelled
 
         name = os.path.splitext(os.path.basename(path))[0]
-        template = build_current_template(ctx, name=name)
+        template = build_current_template(ctx, name=name, module=module)
         save_template(path, template)
         _message_box(ctx, t("product"), t("export_body", os.path.basename(path)))
     except Exception as exc:  # noqa: BLE001

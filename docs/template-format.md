@@ -4,6 +4,15 @@ LOUIM templates use the `.louim` file extension.
 
 A `.louim` file is a JSON file that describes a simplified LibreOffice interface profile.
 
+## Application
+
+The top-level `application` field selects which LibreOffice app the template
+targets: `"writer"` or `"calc"` (Impress and Draw are planned). Apply only works
+when the active document matches the template's application. The same sections
+(`menus`, `toolbars`, `toolbaritems`, `sidebar`, `addons`) work for every
+application — only the UNO command IDs / resource URLs differ. Use
+`tools/discover-menus.py --module calc` to list Calc's IDs.
+
 ## Design rule
 
 Templates must use LibreOffice UNO command IDs, not visible menu labels.

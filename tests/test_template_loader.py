@@ -39,9 +39,21 @@ class LoadTemplateTest(unittest.TestCase):
 
     def test_wrong_application(self):
         with tempfile.TemporaryDirectory() as d:
-            path = _write(d, {"application": "calc", "menus": {}})
+            path = _write(d, {"application": "impress", "menus": {}})
             with self.assertRaises(TemplateError):
                 load_template(path)
+
+    def test_calc_application_supported(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = _write(d, {"application": "calc",
+                              "menus": {".uno:ToolsMenu": False}})
+            self.assertEqual(load_template(path)["application"], "calc")
+
+    def test_loads_bundled_calc_templates(self):
+        for name in ("calc-level-1", "calc-level-2", "calc-full"):
+            template = load_template(str(ROOT / "templates" / (name + ".louim")))
+            self.assertEqual(template["application"], "calc")
+            self.assertIn("menus", template)
 
     def test_non_boolean_menu_value(self):
         with tempfile.TemporaryDirectory() as d:

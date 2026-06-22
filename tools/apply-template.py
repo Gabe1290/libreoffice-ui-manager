@@ -47,6 +47,7 @@ from louim.adapters.writer.toolbaritems import (  # noqa: E402
     hidden_toolbar_commands,
 )
 from louim.template.loader import load_template  # noqa: E402
+from louim.adapters.modules import get_module  # noqa: E402
 
 
 def connect(host, port):
@@ -63,7 +64,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("template", nargs="?", help="path to a .louim template")
     parser.add_argument("--restore", action="store_true",
-                        help="restore the factory-default Writer menu bar")
+                        help="restore the factory-default interface")
+    parser.add_argument("--module", default="writer", choices=("writer", "calc"),
+                        help="application to restore (apply uses the template's "
+                             "own application); default: writer")
     parser.add_argument("--host", default="localhost")
     parser.add_argument("--port", type=int, default=2002)
     args = parser.parse_args()
@@ -79,11 +83,12 @@ def main():
         return 1
 
     if args.restore:
-        restored_menus = restore_default_menus(ctx)
-        restored_addons = restore_addon_menus(ctx)
-        restored_toolbars = restore_toolbars(ctx)
-        restored_items = restore_toolbar_items(ctx)
-        restored_decks = restore_sidebar_decks(ctx)
+        module = get_module(args.module)
+        restored_menus = restore_default_menus(ctx, module)
+        restored_addons = restore_addon_menus(ctx, module)
+        restored_toolbars = restore_toolbars(ctx, module)
+        restored_items = restore_toolbar_items(ctx, module)
+        restored_decks = restore_sidebar_decks(ctx, module)
         print("Restored default menu bar." if restored_menus
               else "Menu bar already default.")
         print("Restored %d addon menu(s): %s"
@@ -97,12 +102,14 @@ def main():
         return 0
 
     template = load_template(args.template)
+    module = get_module(template["application"])
     profile = template.get("profile", {})
-    hidden = apply_menu_profile(ctx, template.get("menus", {}))
-    hidden_addons = apply_addon_profile(ctx, template.get("addons", {}))
-    hidden_toolbars = apply_toolbar_profile(ctx, template.get("toolbars", {}))
-    modified_item_bars = apply_toolbar_items(ctx, hidden_toolbar_commands(ctx, template))
-    hidden_decks = apply_sidebar_profile(ctx, template.get("sidebar", {}))
+    hidden = apply_menu_profile(ctx, template.get("menus", {}), module)
+    hidden_addons = apply_addon_profile(ctx, template.get("addons", {}), module)
+    hidden_toolbars = apply_toolbar_profile(ctx, template.get("toolbars", {}), module)
+    modified_item_bars = apply_toolbar_items(
+        ctx, hidden_toolbar_commands(ctx, template, module), module)
+    hidden_decks = apply_sidebar_profile(ctx, template.get("sidebar", {}), module)
     print("Applied profile: %s" % profile.get("name", args.template))
     print("Hidden %d menu(s): %s" % (len(hidden), ", ".join(hidden) or "none"))
     print("Hidden %d addon menu(s): %s"

@@ -6,6 +6,9 @@
 
 import json
 
+# Template "application" values LOUIM can apply (LibreOffice module keys).
+SUPPORTED_APPLICATIONS = ("writer", "calc")
+
 
 class TemplateError(ValueError):
     """Raised when a .louim file is missing or structurally invalid."""
@@ -27,10 +30,10 @@ def load_template(path):
 
     if not isinstance(data, dict):
         raise TemplateError("template root must be a JSON object")
-    if data.get("application") != "writer":
+    if data.get("application") not in SUPPORTED_APPLICATIONS:
         raise TemplateError(
-            "unsupported application: %r (only 'writer' is supported)"
-            % data.get("application")
+            "unsupported application: %r (supported: %s)"
+            % (data.get("application"), ", ".join(SUPPORTED_APPLICATIONS))
         )
 
     _validate_bool_map(data.get("menus", {}), "menus", "menu")

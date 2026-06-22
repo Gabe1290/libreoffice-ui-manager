@@ -1,4 +1,4 @@
-# LibreOffice UI Manager — Writer sidebar adapter.
+# LibreOffice UI Manager — sidebar deck adapter (module-parameterized).
 #
 # The sidebar shows "decks" (Properties, Styles, Gallery, Navigator, ...) chosen
 # by the configuration node
@@ -7,34 +7,26 @@
 #
 # Each deck has a ``ContextList``: a list of strings, one per context descriptor,
 # each "Application, Context, InitialState" (e.g. "WriterVariants, any, visible").
-# A deck appears in Writer when its ContextList has an entry for a Writer
-# application group (or the catch-all "any"). To hide a deck from Writer we drop
-# its Writer entries — exactly the approach addons.py uses for extension menus —
-# saving the original list to a state file so it can be restored. Changes take
-# effect for newly opened Writer windows.
+# A deck appears in an application when its ContextList has an entry for that
+# application group (or the catch-all "any"). To hide a deck we drop the module's
+# entries — exactly the approach addons.py uses for extension menus — saving the
+# original list to a per-module state file so it can be restored. Changes take
+# effect for newly opened windows.
 #
-# The ContextList parsing/editing is pure Python (no ``uno``) so it is unit
-# tested in CI; only the configuration read/write needs LibreOffice.
+# The DeckList is shared across applications (it is not per-module config), so a
+# deck managed in two applications at once shares one ContextList; LOUIM tracks
+# each module's change in its own state file.
+#
+# The ContextList parsing/editing is pure Python (no ``uno``) and unit-tested.
 
 import json
 import os
 
+from louim.adapters.modules import WRITER
+
 SIDEBAR_DECKS_NODE = "/org.openoffice.Office.UI.Sidebar/Content/DeckList"
 
-# Application-group names that mean a deck shows in Writer. "WriterVariants"
-# covers the plain/web/global Writer documents; the others appear in some deck
-# definitions. "any" (handled separately) matches every application.
-WRITER_DECK_APPS = (
-    "WriterVariants", "Writer", "WriterWeb", "WriterGlobal",
-    "WriterXForm", "WriterReport", "WriterForm",
-)
-
-# When a deck is contextually "any" (all apps) and we remove Writer, we rewrite
-# the entry to the non-Writer applications so the deck stays everywhere except
-# Writer — mirroring addons.py's NON_WRITER_CONTEXTS fallback.
-NON_WRITER_DECK_APPS = ("Calc", "DrawImpress", "Chart", "Math")
-
-STATE_FILENAME = "louim-sidebar-state.json"
+_STATE_FILENAME = "louim-sidebar-state-%s.json"
 
 
 # --- pure ContextList helpers (no uno) ---------------------------------------
@@ -49,30 +41,30 @@ def _rest_of(entry):
     return entry.split(",", 1)[1].strip() if "," in entry else ""
 
 
-def shows_in_writer(context_list):
-    """True if a deck with this ContextList appears in Writer."""
+def shows_in_module(context_list, module=WRITER):
+    """True if a deck with this ContextList appears in ``module``."""
     for entry in context_list:
         app = _app_of(entry)
-        if app == "any" or app in WRITER_DECK_APPS:
+        if app == "any" or app in module.deck_apps:
             return True
     return False
 
 
-def strip_writer(context_list):
-    """Return a ContextList with Writer removed (kept elsewhere).
+def strip_module(context_list, module=WRITER):
+    """Return a ContextList with ``module`` removed (kept elsewhere).
 
-    Writer-specific entries are dropped. A catch-all "any" entry is rewritten to
-    the non-Writer applications so the deck still appears in Calc/Draw/etc.
+    The module's entries are dropped. A catch-all "any" entry is rewritten to the
+    other applications so the deck still appears outside this module.
     """
     out = []
     for entry in context_list:
         app = _app_of(entry)
         if app == "any":
             rest = _rest_of(entry)
-            for other in NON_WRITER_DECK_APPS:
+            for other in module.other_deck_apps:
                 out.append("%s, %s" % (other, rest) if rest else other)
-        elif app in WRITER_DECK_APPS:
-            continue  # drop the Writer entry
+        elif app in module.deck_apps:
+            continue  # drop the module's entry
         else:
             out.append(entry)
     return out
@@ -121,21 +113,20 @@ def _set_context_list(provider, deck_id, entries):
     import uno
     upd = _update_access(provider, _deck_path(deck_id))
     # ContextList is a string sequence; the config manager rejects a bare Python
-    # tuple ("inappropriate property value"). Hand it an explicitly typed Any via
-    # uno.invoke, the same way the menu-bar adapter passes typed sequences.
+    # tuple ("inappropriate property value"). Hand it an explicitly typed Any.
     value = uno.Any("[]string", tuple(entries))
     uno.invoke(upd, "setPropertyValue", ("ContextList", value))
     upd.commitChanges()
 
 
-def state_path(ctx):
-    """Absolute path of the LOUIM sidebar-state file in the user profile."""
+def state_path(ctx, module=WRITER):
+    """Absolute path of the LOUIM sidebar-state file for ``module``."""
     import uno
     ps = ctx.getServiceManager().createInstanceWithContext(
         "com.sun.star.util.PathSubstitution", ctx
     )
     user_dir = uno.fileUrlToSystemPath(ps.getSubstituteVariableValue("$(user)"))
-    return os.path.join(user_dir, STATE_FILENAME)
+    return os.path.join(user_dir, _STATE_FILENAME % module.key)
 
 
 def _load_state(path):
@@ -156,8 +147,8 @@ def _save_state(path, state):
 
 # --- public API --------------------------------------------------------------
 
-def discover_sidebar_decks(ctx):
-    """Discover sidebar decks that appear in Writer.
+def discover_sidebar_decks(ctx, module=WRITER):
+    """Discover sidebar decks that appear in ``module``.
 
     Returns a list of dicts in configuration order, each:
         {"deck": "GalleryDeck", "title": "Gallery"}
@@ -175,7 +166,7 @@ def discover_sidebar_decks(ctx):
             context_list = list(entry.getByName("ContextList") or [])
         except Exception:  # noqa: BLE001
             context_list = []
-        if not shows_in_writer(context_list):
+        if not shows_in_module(context_list, module):
             continue
         try:
             title = entry.getByName("Title")
@@ -185,11 +176,10 @@ def discover_sidebar_decks(ctx):
     return decks
 
 
-def sidebar_visibility(ctx):
-    """Snapshot whether each sidebar deck currently shows in Writer.
+def sidebar_visibility(ctx, module=WRITER):
+    """Snapshot whether each sidebar deck currently shows in ``module``.
 
-    Returns a dict mapping deck Id to a bool, for exporting the current interface
-    as a template.
+    Returns a dict mapping deck Id to a bool, for exporting the current interface.
     """
     provider = _config_provider(ctx)
     access = _read_access(provider, SIDEBAR_DECKS_NODE)
@@ -200,21 +190,20 @@ def sidebar_visibility(ctx):
             context_list = list(access.getByName(deck_id).getByName("ContextList") or [])
         except Exception:  # noqa: BLE001
             continue
-        snapshot[deck_id] = shows_in_writer(context_list)
+        snapshot[deck_id] = shows_in_module(context_list, module)
     return snapshot
 
 
-def apply_sidebar_profile(ctx, sidebar, path=None):
-    """Hide/show Writer sidebar decks per a "sidebar" profile.
+def apply_sidebar_profile(ctx, sidebar, module=WRITER, path=None):
+    """Hide/show ``module`` sidebar decks per a "sidebar" profile.
 
     ``sidebar`` maps deck Ids to booleans (True = visible, False = hidden). Decks
-    not mentioned are left untouched. Returns the list of deck Ids that were
-    hidden.
+    not mentioned are left untouched. Returns the list of deck Ids hidden.
 
     Original ContextList values are saved to the state file before the first
     change so the exact pre-LOUIM state can be restored, even across restarts.
     """
-    path = path or state_path(ctx)
+    path = path or state_path(ctx, module)
     provider = _config_provider(ctx)
     state = _load_state(path)
 
@@ -226,10 +215,10 @@ def apply_sidebar_profile(ctx, sidebar, path=None):
             continue  # unknown deck, skip
 
         if visible is False:
-            if shows_in_writer(current):
+            if shows_in_module(current, module):
                 if deck_id not in state:
                     state[deck_id] = current  # remember the original
-                _set_context_list(provider, deck_id, strip_writer(current))
+                _set_context_list(provider, deck_id, strip_module(current, module))
             hidden.append(deck_id)
         else:
             # Explicitly visible: restore original if we had hidden it.
@@ -240,12 +229,12 @@ def apply_sidebar_profile(ctx, sidebar, path=None):
     return hidden
 
 
-def restore_sidebar_decks(ctx, path=None):
+def restore_sidebar_decks(ctx, module=WRITER, path=None):
     """Restore every sidebar deck LOUIM hid to its original ContextList.
 
     Returns the list of deck Ids restored.
     """
-    path = path or state_path(ctx)
+    path = path or state_path(ctx, module)
     provider = _config_provider(ctx)
     state = _load_state(path)
 

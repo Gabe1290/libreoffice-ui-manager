@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "application": "calc",
+  "profile": {
+    "name": "Complete Calc",
+    "description": "Restores the full LibreOffice Calc interface."
+  },
+  "menus": {
+    ".uno:PickList": true,
+    ".uno:EditMenu": true,
+    ".uno:ViewMenu": true,
+    ".uno:InsertMenu": true,
+    ".uno:FormatMenu": true,
+    ".uno:FormatStylesMenu": true,
+    ".uno:SheetMenu": true,
+    ".uno:DataMenu": true,
+    ".uno:ToolsMenu": true,
+    ".uno:WindowList": true,
+    ".uno:HelpMenu": true
+  },
+  "addons": {},
+  "toolbars": {},
+  "sidebar": {}
+}

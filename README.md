@@ -5,8 +5,8 @@ LibreOffice interface.
 
 Its goal is to help students and adult beginners learn word processing progressively, without being overwhelmed by too many menus and options.
 
-**Version 1.0.0** — stable release for LibreOffice **Writer**. Available in
-English, French, German, and Italian.
+**Version 2.0.0** — stable release for LibreOffice **Writer** and **Calc**.
+Available in English, French, German, and Italian.
 
 ## Install
 
@@ -19,19 +19,20 @@ English, French, German, and Italian.
 
 Or build it yourself with `python tools/build.py` (output in `dist/louim.oxt`).
 
-## First target
+## Supported applications
 
-Writer only.
+Writer and Calc. (Impress and Draw are on the roadmap and follow the same
+module pattern.)
 
 ## Main idea
 
 Teachers can create and share interface templates such as:
 
-- Writer Level 1
-- Writer Level 2
-- Full Writer
+- Writer / Calc — Level 1
+- Writer / Calc — Level 2
+- Full Writer / Full Calc
 
-Students can import a template and work with a simplified LibreOffice Writer interface.
+Students can import a template and work with a simplified LibreOffice Writer or Calc interface.
 
 ## Template format
 

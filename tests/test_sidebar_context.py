@@ -1,9 +1,7 @@
-"""Tests for the sidebar ContextList logic.
+"""Tests for the sidebar ContextList logic (module-parameterized).
 
-Pure Python — no LibreOffice/UNO. sidebar.py imports ``uno`` lazily (only inside
-the config-access helpers), so the ContextList parsing/editing functions import
-and run without LibreOffice. The live apply/restore is verified separately
-against a throwaway instance / in the GUI.
+Pure Python — no LibreOffice/UNO. sidebar.py imports ``uno`` lazily, so the
+ContextList parsing/editing functions import and run without LibreOffice.
 """
 
 import sys
@@ -14,62 +12,61 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from louim.adapters.writer.sidebar import (  # noqa: E402
-    shows_in_writer, strip_writer, NON_WRITER_DECK_APPS,
+    shows_in_module, strip_module,
 )
+from louim.adapters.modules import WRITER, CALC  # noqa: E402
 
 
-class ShowsInWriterTest(unittest.TestCase):
-    def test_writer_variants_shows(self):
-        self.assertTrue(shows_in_writer(["WriterVariants, any, visible"]))
+class ShowsInModuleTest(unittest.TestCase):
+    def test_writer_variants_shows_in_writer(self):
+        self.assertTrue(shows_in_module(["WriterVariants, any, visible"], WRITER))
 
-    def test_plain_writer_shows(self):
-        self.assertTrue(shows_in_writer(["Writer, AnyContext, hidden"]))
+    def test_any_shows_in_any_module(self):
+        self.assertTrue(shows_in_module(["any, any, visible"], WRITER))
+        self.assertTrue(shows_in_module(["any, any, visible"], CALC))
 
-    def test_any_shows(self):
-        self.assertTrue(shows_in_writer(["any, any, visible"]))
+    def test_calc_shows_in_calc_not_writer(self):
+        self.assertTrue(shows_in_module(["Calc, any, visible"], CALC))
+        self.assertFalse(shows_in_module(["Calc, any, visible"], WRITER))
 
-    def test_non_writer_does_not_show(self):
-        self.assertFalse(shows_in_writer(["Calc, any, visible",
-                                          "DrawImpress, any, visible"]))
+    def test_writer_does_not_show_in_calc(self):
+        self.assertFalse(shows_in_module(["WriterVariants, any, visible"], CALC))
 
     def test_empty_does_not_show(self):
-        self.assertFalse(shows_in_writer([]))
+        self.assertFalse(shows_in_module([], WRITER))
 
 
-class StripWriterTest(unittest.TestCase):
-    def test_drops_writer_keeps_others(self):
-        out = strip_writer(["WriterVariants, any, visible",
-                            "Calc, any, visible"])
+class StripModuleTest(unittest.TestCase):
+    def test_writer_drops_writer_keeps_others(self):
+        out = strip_module(["WriterVariants, any, visible", "Calc, any, visible"],
+                           WRITER)
         self.assertEqual(out, ["Calc, any, visible"])
-        self.assertFalse(shows_in_writer(out))
+        self.assertFalse(shows_in_module(out, WRITER))
 
-    def test_any_expands_to_non_writer_apps(self):
-        out = strip_writer(["any, any, visible"])
-        self.assertEqual(out, ["%s, any, visible" % a for a in NON_WRITER_DECK_APPS])
-        self.assertFalse(shows_in_writer(out))
+    def test_calc_drops_calc_keeps_writer(self):
+        out = strip_module(["WriterVariants, any, visible", "Calc, any, visible"],
+                           CALC)
+        self.assertEqual(out, ["WriterVariants, any, visible"])
+        self.assertFalse(shows_in_module(out, CALC))
 
-    def test_writer_only_deck_becomes_empty(self):
-        out = strip_writer(["Writer, SomeContext, hidden"])
-        self.assertEqual(out, [])
-        self.assertFalse(shows_in_writer(out))
+    def test_any_expands_to_other_apps(self):
+        out = strip_module(["any, any, visible"], WRITER)
+        self.assertEqual(out,
+                         ["%s, any, visible" % a for a in WRITER.other_deck_apps])
+        self.assertFalse(shows_in_module(out, WRITER))
 
-    def test_non_writer_entries_untouched(self):
+    def test_module_only_deck_becomes_empty(self):
+        self.assertEqual(strip_module(["Writer, SomeContext, hidden"], WRITER), [])
+        self.assertEqual(strip_module(["Calc, SomeContext, hidden"], CALC), [])
+
+    def test_non_module_entries_untouched(self):
         entries = ["Calc, any, visible", "DrawImpress, any, hidden"]
-        self.assertEqual(strip_writer(entries), entries)
-
-    def test_mixed_writer_groups_all_dropped(self):
-        out = strip_writer([
-            "WriterVariants, any, visible",
-            "WriterGlobal, any, visible",
-            "Calc, any, visible",
-        ])
-        self.assertEqual(out, ["Calc, any, visible"])
+        self.assertEqual(strip_module(entries, WRITER), entries)
 
     def test_round_trip_idempotent_after_strip(self):
-        # Stripping an already-stripped list changes nothing further.
-        once = strip_writer(["WriterVariants, any, visible", "Calc, any, visible"])
-        twice = strip_writer(once)
-        self.assertEqual(once, twice)
+        once = strip_module(["WriterVariants, any, visible", "Calc, any, visible"],
+                            WRITER)
+        self.assertEqual(strip_module(once, WRITER), once)
 
 
 if __name__ == "__main__":
