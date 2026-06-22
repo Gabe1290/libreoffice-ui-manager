@@ -196,7 +196,9 @@ Layout as Template...**. LOUIM snapshots the current interface into a new
 
 - **menus** — every top-level menu (true/false) and every individual menu item
   you have removed (via Tools ▸ Customize) as `false`;
-- **toolbaritems** — every toolbar button you have removed as `false`;
+- **toolbaritems** — every toolbar button you have hidden as `false` (whether
+  removed or unchecked via Tools ▸ Customize, which only flips the button's
+  visibility);
 - **toolbars** — the common Writer toolbars' visibility (plus any you hid);
 - **sidebar** — each deck's visibility; **addons** — extension menus.
 

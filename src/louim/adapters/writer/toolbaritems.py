@@ -102,14 +102,34 @@ def _toolbar_resources(ctx):
     return [t["resource"] for t in discover_toolbars(ctx)]
 
 
-def toolbar_item_visibility(ctx):
-    """Snapshot toolbar buttons a teacher has removed, as {command: False}.
+def _visible_commands(container, out):
+    """Collect commands whose toolbar item is visible (IsVisible is not False).
 
-    For every toolbar, compares its factory default button list against the live
-    one and records each command present in the default but missing now. This is
-    the ``toolbaritems`` shape, so exporting then applying reproduces the current
-    (possibly hand-customized) toolbar buttons. Buttons left in place are omitted
-    (they default to visible on apply).
+    Tools ▸ Customize hides a button by setting its ``IsVisible`` to False while
+    leaving it in the toolbar definition (``toolbar:visible="false"`` in the
+    config), so a button can be "removed" yet still present. Comparing visibility
+    rather than mere presence catches those.
+    """
+    for i in range(container.getCount()):
+        entry = _props_to_dict(container.getByIndex(i))
+        command = entry.get("CommandURL")
+        if command and entry.get("IsVisible", True) is not False:
+            out.add(command)
+        sub = entry.get("ItemDescriptorContainer")
+        if sub is not None:
+            _visible_commands(sub, out)
+    return out
+
+
+def toolbar_item_visibility(ctx):
+    """Snapshot toolbar buttons a teacher has hidden, as {command: False}.
+
+    For every toolbar, records each command that is visible in the factory
+    default but not visible now — whether it was removed outright or merely
+    hidden via Tools ▸ Customize (``IsVisible`` False). This is the
+    ``toolbaritems`` shape, so exporting then applying reproduces the current
+    toolbar buttons. Buttons still shown are omitted (they default to visible on
+    apply).
     """
     ui_cfg = _module_ui_config(ctx)
     hidden = {}
@@ -118,16 +138,16 @@ def toolbar_item_visibility(ctx):
             default = ui_cfg.getDefaultSettings(resource)
         except Exception:  # noqa: BLE001 — toolbar without a factory default
             continue
-        default_cmds = _collect_commands(default, [])
-        if not default_cmds:
+        default_visible = _visible_commands(default, set())
+        if not default_visible:
             continue
         try:
             current = ui_cfg.getSettings(resource, False)
         except Exception:  # noqa: BLE001
             continue
-        current_cmds = set(_collect_commands(current, []))
-        for command in default_cmds:
-            if command and command not in current_cmds:
+        current_visible = _visible_commands(current, set())
+        for command in default_visible:
+            if command not in current_visible:
                 hidden[command] = False
     return hidden
 

@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from louim.adapters.writer.toolbaritems import (  # noqa: E402
-    hidden_commands_for, _collect_commands,
+    hidden_commands_for, _collect_commands, _visible_commands,
 )
 
 
@@ -57,7 +57,7 @@ class _Prop:
 
 class FakeContainer:
     def __init__(self, entries):
-        self._entries = entries  # list of {command, sub}
+        self._entries = entries  # list of {command, sub, visible}
 
     def getCount(self):
         return len(self._entries)
@@ -65,6 +65,8 @@ class FakeContainer:
     def getByIndex(self, i):
         e = self._entries[i]
         props = [_Prop("CommandURL", e.get("command"))]
+        if "visible" in e:
+            props.append(_Prop("IsVisible", e["visible"]))
         if e.get("sub") is not None:
             props.append(_Prop("ItemDescriptorContainer", e["sub"]))
         return props
@@ -82,6 +84,22 @@ class CollectCommandsTest(unittest.TestCase):
         out = _collect_commands(root, [])
         self.assertEqual(out, [".uno:Save", ".uno:InsertTable",
                                ".uno:SubA", ".uno:SubB"])
+
+
+class VisibleCommandsTest(unittest.TestCase):
+    def test_excludes_isvisible_false(self):
+        root = FakeContainer([
+            {"command": ".uno:Save"},                       # no IsVisible -> shown
+            {"command": ".uno:OpenUrl", "visible": False},  # Customize-hidden
+            {"command": ".uno:Print", "visible": True},
+        ])
+        self.assertEqual(_visible_commands(root, set()),
+                         {".uno:Save", ".uno:Print"})
+
+    def test_recurses(self):
+        sub = FakeContainer([{"command": ".uno:Sub", "visible": False}])
+        root = FakeContainer([{"command": ".uno:Menu", "sub": sub}])
+        self.assertEqual(_visible_commands(root, set()), {".uno:Menu"})
 
 
 if __name__ == "__main__":

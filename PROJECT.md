@@ -68,6 +68,17 @@ outside the package.
 4. Add a localized `description.xml` / `description.txt` for the Extension
    Manager (currently English only) if desired.
 
+## Done (verified on isolated instance) — Export captures Customize-hidden buttons
+
+Fix: a saved template did not re-hide toolbar icons the teacher had removed via
+Tools ▸ Customize. Customize doesn't delete a button — it sets the item's
+``IsVisible`` to False (``toolbar:visible="false"`` in the config) while leaving
+it in the toolbar. The export compared *presence*, so it missed those. Now
+`toolbar_item_visibility` compares **visibility** via `_visible_commands`
+(IsVisible-aware), so a button hidden either way is captured as `toolbaritems`
+`false`. Verified on a throwaway: an IsVisible=False hide was captured by the
+export and re-hidden by re-applying the template. 64 tests pass (2 new).
+
 ## Done (verified on isolated instance) — Toolbar icons restore + reduce with menus
 
 Fixes a gap: removed toolbar icons were not restored by applying another
