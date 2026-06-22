@@ -10,17 +10,17 @@ LOUIM is not primarily a lockdown tool. It is a learning tool.
 
 ## Current Milestone
 
-**Version 3.0.0 — Impress (2026-06-20).**
+**Version 4.0.0 — Draw (2026-06-20). Roadmap complete.**
 
-LOUIM now drives **Writer, Calc, and Impress** from one module-parameterized
-engine (`src/louim/adapters/modules.py`): a `Module` descriptor carries the
-per-app identifiers (document service, window-state node, sidebar app names,
-addon contexts, and shared sidebar context-group substitutions). Every adapter
-takes a `module` (default Writer); the extension routes apply/restore/export by
-the active document. Impress also exercised the `DrawImpress` sidebar group
-(hiding a deck from Impress keeps it in Draw). Starter templates ship for all
-three apps. Verified on throwaway Writer/Calc/Impress instances; 76 unit tests
-pass. Last horizon: Draw (4.0) — a new `Module` plus templates.
+LOUIM drives **all four core LibreOffice apps — Writer, Calc, Impress, Draw —**
+from one module-parameterized engine (`src/louim/adapters/modules.py`): a
+`Module` descriptor carries the per-app identifiers (document service,
+window-state node, sidebar app names, addon contexts, and shared sidebar
+context-group substitutions). Every adapter takes a `module` (default Writer);
+the extension routes apply/restore/export by the active document. Impress and
+Draw are complementary halves of the `DrawImpress` sidebar group. Starter
+templates ship for all four apps. Verified on throwaway Writer/Calc/Impress/Draw
+instances; 77 unit tests pass. Releases v1.0.0–v4.0.0 are tagged and published.
 
 ## Resolved
 

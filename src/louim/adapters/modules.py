@@ -81,7 +81,26 @@ IMPRESS = Module(
                           "com.sun.star.formula.FormulaProperties"),
 )
 
-MODULES = {m.key: m for m in (WRITER, CALC, IMPRESS)}
+DRAW = Module(
+    key="draw",
+    doc_service="com.sun.star.drawing.DrawingDocument",
+    windowstate_node="/org.openoffice.Office.UI.DrawWindowState/UIElements/States",
+    # Mirror of Impress: a deck shows via "Draw" or the shared "DrawImpress"
+    # group; the group is replaced with "Impress" on strip so the deck stays in
+    # Impress.
+    deck_apps=("Draw", "DrawImpress"),
+    deck_group_subs={"DrawImpress": ("Impress",)},
+    other_deck_apps=("WriterVariants", "Calc", "Impress", "Chart", "Math"),
+    addon_contexts=("com.sun.star.drawing.DrawingDocument",),
+    other_addon_contexts=("com.sun.star.text.TextDocument",
+                          "com.sun.star.text.WebDocument",
+                          "com.sun.star.text.GlobalDocument",
+                          "com.sun.star.sheet.SpreadsheetDocument",
+                          "com.sun.star.presentation.PresentationDocument",
+                          "com.sun.star.formula.FormulaProperties"),
+)
+
+MODULES = {m.key: m for m in (WRITER, CALC, IMPRESS, DRAW)}
 
 
 def get_module(key):

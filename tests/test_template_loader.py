@@ -39,7 +39,7 @@ class LoadTemplateTest(unittest.TestCase):
 
     def test_wrong_application(self):
         with tempfile.TemporaryDirectory() as d:
-            path = _write(d, {"application": "draw", "menus": {}})
+            path = _write(d, {"application": "math", "menus": {}})
             with self.assertRaises(TemplateError):
                 load_template(path)
 
@@ -59,6 +59,12 @@ class LoadTemplateTest(unittest.TestCase):
         for name in ("impress-level-1", "impress-level-2", "impress-full"):
             template = load_template(str(ROOT / "templates" / (name + ".louim")))
             self.assertEqual(template["application"], "impress")
+            self.assertIn("menus", template)
+
+    def test_loads_bundled_draw_templates(self):
+        for name in ("draw-level-1", "draw-level-2", "draw-full"):
+            template = load_template(str(ROOT / "templates" / (name + ".louim")))
+            self.assertEqual(template["application"], "draw")
             self.assertIn("menus", template)
 
     def test_non_boolean_menu_value(self):

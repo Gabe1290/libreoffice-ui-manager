@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "application": "draw",
+  "profile": {
+    "name": "Getting Started (Draw)",
+    "description": "Very simple Draw interface for beginners making their first drawings."
+  },
+  "menus": {
+    ".uno:PickList": true,
+    ".uno:EditMenu": true,
+    ".uno:ViewMenu": false,
+    ".uno:InsertMenu": true,
+    ".uno:FormatMenu": true,
+    ".uno:PageMenu": false,
+    ".uno:ShapeMenu": false,
+    ".uno:ToolsMenu": false,
+    ".uno:WindowList": false,
+    ".uno:HelpMenu": true
+  },
+  "addons": {},
+  "toolbars": {},
+  "sidebar": {},
+  "hide_toolbar_buttons_with_menus": true
+}

@@ -15,7 +15,7 @@
                      recent LibreOffice versions. Bind it to every application
                      LOUIM supports so the menu appears there. -->
                 <prop oor:name="Context" oor:type="xs:string">
-                    <value>com.sun.star.text.TextDocument,com.sun.star.text.GlobalDocument,com.sun.star.sheet.SpreadsheetDocument,com.sun.star.presentation.PresentationDocument</value>
+                    <value>com.sun.star.text.TextDocument,com.sun.star.text.GlobalDocument,com.sun.star.sheet.SpreadsheetDocument,com.sun.star.presentation.PresentationDocument,com.sun.star.drawing.DrawingDocument</value>
                 </prop>
                 <prop oor:name="Target" oor:type="xs:string">
                     <value>_self</value>

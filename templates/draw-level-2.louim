@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "application": "draw",
+  "profile": {
+    "name": "Basic Drawing",
+    "description": "Draw interface for learners ready to use pages and shape tools."
+  },
+  "menus": {
+    ".uno:PickList": true,
+    ".uno:EditMenu": true,
+    ".uno:ViewMenu": true,
+    ".uno:InsertMenu": true,
+    ".uno:FormatMenu": true,
+    ".uno:PageMenu": true,
+    ".uno:ShapeMenu": true,
+    ".uno:ToolsMenu": false,
+    ".uno:WindowList": false,
+    ".uno:HelpMenu": true
+  },
+  "addons": {},
+  "toolbars": {},
+  "sidebar": {},
+  "hide_toolbar_buttons_with_menus": true
+}

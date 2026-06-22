@@ -3,6 +3,27 @@
 All notable changes to LibreOffice UI Manager (LOUIM) are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.0.0] — 2026-06-20
+
+Adds **LibreOffice Draw** — LOUIM now supports all four core apps (Writer, Calc,
+Impress, Draw).
+
+### Added
+
+- **Draw support** — the full Apply Engine works in Draw. The **LibreOffice UI
+  Manager** menu appears in Draw, and Apply / Restore / Save Current Layout act
+  on the active application.
+- Three bundled Draw starter templates: *Getting Started (Draw)*,
+  *Basic Drawing*, *Complete Draw*.
+- Templates may target `"draw"`.
+
+### Notes
+
+- Draw and Impress are complementary halves of the `DrawImpress` sidebar context
+  group: hiding a deck from Draw keeps it in Impress, and vice versa.
+- Verified live on a throwaway, isolated Draw instance; 77 offline unit tests
+  pass.
+
 ## [3.0.0] — 2026-06-20
 
 Adds **LibreOffice Impress** support alongside Writer and Calc.

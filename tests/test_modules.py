@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from louim.adapters.modules import (  # noqa: E402
-    WRITER, CALC, IMPRESS, MODULES, get_module, module_for_document,
+    WRITER, CALC, IMPRESS, DRAW, MODULES, get_module, module_for_document,
 )
 
 
@@ -22,20 +22,21 @@ class _FakeDoc:
 
 class ModuleTest(unittest.TestCase):
     def test_keys(self):
-        self.assertEqual(WRITER.key, "writer")
-        self.assertEqual(CALC.key, "calc")
-        self.assertEqual(IMPRESS.key, "impress")
-        self.assertEqual(set(MODULES), {"writer", "calc", "impress"})
+        self.assertEqual(set(MODULES), {"writer", "calc", "impress", "draw"})
+        for key, mod in MODULES.items():
+            self.assertEqual(mod.key, key)
 
     def test_get_module(self):
         self.assertIs(get_module("writer"), WRITER)
         self.assertIs(get_module("calc"), CALC)
         self.assertIs(get_module("impress"), IMPRESS)
-        self.assertIsNone(get_module("draw"))
+        self.assertIs(get_module("draw"), DRAW)
+        self.assertIsNone(get_module("math"))
 
-    def test_impress_shares_drawimpress_group_with_draw(self):
-        self.assertIn("DrawImpress", IMPRESS.deck_apps)
+    def test_drawimpress_group_subs_are_complementary(self):
+        # Hiding from Impress keeps Draw, and vice versa.
         self.assertEqual(IMPRESS.deck_group_subs["DrawImpress"], ("Draw",))
+        self.assertEqual(DRAW.deck_group_subs["DrawImpress"], ("Impress",))
 
     def test_distinct_windowstate_nodes(self):
         self.assertIn("WriterWindowState", WRITER.windowstate_node)
