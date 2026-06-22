@@ -155,17 +155,6 @@ def _pick_save_path(ctx, t):
     return uno.fileUrlToSystemPath(files[0]) if files else None
 
 
-def hello(*args):
-    """Temporary smoke-test entry point for the first LOUIM extension."""
-    ctx = XSCRIPTCONTEXT.getComponentContext()
-    try:
-        _ensure_package_path(ctx)
-        t = _translator(ctx)
-        _message_box(ctx, t("product"), t("hello_body"))
-    except Exception as exc:  # noqa: BLE001 — surface any glue failure to the log
-        print("LOUIM error:", exc)
-
-
 def apply_template(*args):
     """Pick a .louim template and apply its menu profile to Writer."""
     ctx = XSCRIPTCONTEXT.getComponentContext()
@@ -250,4 +239,4 @@ def export_template(*args):
 
 
 # Expose the entry points to the LibreOffice script provider.
-g_exportedScripts = (hello, apply_template, restore_menus, export_template)
+g_exportedScripts = (apply_template, restore_menus, export_template)

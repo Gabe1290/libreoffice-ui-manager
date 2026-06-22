@@ -63,25 +63,6 @@
                             <value>_self</value>
                         </prop>
                     </node>
-                    <node oor:name="m3" oor:op="replace">
-                        <prop oor:name="URL" oor:type="xs:string">
-                            <value>private:separator</value>
-                        </prop>
-                    </node>
-                    <node oor:name="m4" oor:op="replace">
-                        <prop oor:name="Title" oor:type="xs:string">
-                            <value xml:lang="en-US">Hello LOUIM</value>
-                            <value xml:lang="fr">Bonjour LOUIM</value>
-                            <value xml:lang="de">Hallo LOUIM</value>
-                            <value xml:lang="it">Ciao LOUIM</value>
-                        </prop>
-                        <prop oor:name="URL" oor:type="xs:string">
-                            <value>vnd.sun.star.script:louim.oxt/python/louim/extension.py$hello?language=Python&amp;location=user:uno_packages</value>
-                        </prop>
-                        <prop oor:name="Target" oor:type="xs:string">
-                            <value>_self</value>
-                        </prop>
-                    </node>
                 </node>
             </node>
         </node>

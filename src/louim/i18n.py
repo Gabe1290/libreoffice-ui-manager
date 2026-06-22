@@ -23,12 +23,6 @@ _STRINGS = {
         "de": "LibreOffice UI Manager",
         "it": "LibreOffice UI Manager",
     },
-    "hello_body": {
-        "en": "Hello from LOUIM",
-        "fr": "Bonjour de LOUIM",
-        "de": "Hallo von LOUIM",
-        "it": "Ciao da LOUIM",
-    },
     "pick_title": {
         "en": "Choose a LOUIM template",
         "fr": "Choisir un modèle LOUIM",
