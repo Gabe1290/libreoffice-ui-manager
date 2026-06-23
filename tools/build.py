@@ -15,7 +15,6 @@ EXTENSION = ROOT / "extension"
 TEMPLATES = ROOT / "templates"
 DIST = ROOT / "dist"
 BUILD = ROOT / "build" / "louim"
-VERSION = "0.0.1"
 
 
 def clean():

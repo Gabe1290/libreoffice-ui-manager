@@ -35,12 +35,6 @@ _STRINGS = {
         "de": "Alle LOUIM-Vorlagen (*.louim)",
         "it": "Tutti i modelli LOUIM (*.louim)",
     },
-    "filter_module": {
-        "en": "%s templates (*.louim)",
-        "fr": "Modèles %s (*.louim)",
-        "de": "%s-Vorlagen (*.louim)",
-        "it": "Modelli %s (*.louim)",
-    },
     "filter_all": {
         "en": "All files (*.*)",
         "fr": "Tous les fichiers (*.*)",

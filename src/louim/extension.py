@@ -18,6 +18,13 @@ import uno
 # package on disk so the bundled ``louim`` Python package becomes importable.
 _EXTENSION_ID = "org.louim.libreoffice-ui-manager"
 
+# Subfolder of the user's "My Documents" where the Save dialog defaults, so
+# teacher-made templates land in a durable, user-owned place (the per-user
+# extension cache is wiped on every reinstall/update). Deliberately NOT
+# localized: a stable folder name avoids scattering templates across several
+# language-specific folders when the UI language changes.
+_SAVE_SUBDIR = "LOUIM templates"
+
 
 def _package_url(ctx):
     """Return the deployed extension's location as a file URL, or None.
@@ -107,37 +114,60 @@ def _error_box(ctx, exc):
     _message_box(ctx, title, str(exc))
 
 
+def _templates_dir_url(ctx, module):
+    """File URL of the bundled templates folder to open the picker in, or None.
+
+    Filter by *location*, not by filename pattern: the starter templates are
+    bundled in per-application subfolders (``templates/writer/`` etc.), so
+    opening the picker in the active app's subfolder shows only that app's
+    templates. This is what the native file dialog can do reliably -- it filters
+    by extension and by the folder it lands in, but silently ignores prefix
+    globs like ``writer-*.louim``. (The cross-platform wildcard alternative,
+    ``OfficeFilePicker``, hits a Skia list-rendering glitch on locked-down Linux
+    where filenames fail to paint, so it is not an option here.)
+
+    Falls back to the templates root if the per-module subfolder is missing, and
+    to ``None`` (picker opens at its last location) if nothing resolves.
+    """
+    url = _package_url(ctx)
+    if not url:
+        return None
+    root = url.rstrip("/") + "/templates"
+    for candidate in (root + "/" + module.key, root):
+        try:
+            if os.path.isdir(uno.fileUrlToSystemPath(candidate)):
+                return candidate
+        except Exception:  # noqa: BLE001
+            continue
+    return None
+
+
 def _pick_template(ctx, t, module):
     """Open a file picker for a .louim template; return a system path or None.
 
-    Defaults to a filter for the active application (``<app>-*.louim``) so e.g.
-    Writer shows only Writer templates, with an "all templates" entry in the
-    filter dropdown as the escape hatch.
+    Opens in the active application's bundled templates subfolder so e.g. Writer
+    shows only Writer templates (folder-based filtering -- see
+    ``_templates_dir_url``). Navigating up one folder reveals every app's
+    templates, which is the "all templates" escape hatch.
     """
     from com.sun.star.ui.dialogs.ExecutableDialogResults import OK
 
     smgr = ctx.getServiceManager()
+    # Native picker (renders correctly under locked-down school defaults).
     picker = smgr.createInstanceWithContext(
         "com.sun.star.ui.dialogs.FilePicker", ctx
     )
     picker.setTitle(t("pick_title"))
-    module_filter = t("filter_module", module.key.capitalize())
-    picker.appendFilter(module_filter, "%s-*.louim" % module.key)
     picker.appendFilter(t("filter_louim"), "*.louim")
     picker.appendFilter(t("filter_all"), "*.*")
-    picker.setCurrentFilter(module_filter)
+    picker.setCurrentFilter(t("filter_louim"))
 
-    # Default to the starter templates bundled inside the deployed extension so
-    # teachers land on writer-level-1/2 without hunting for a file. Best-effort:
-    # if the folder can't be located the picker just opens at its last location.
-    url = _package_url(ctx)
-    if url:
-        templates_url = url.rstrip("/") + "/templates"
-        try:
-            if os.path.isdir(uno.fileUrlToSystemPath(templates_url)):
-                picker.setDisplayDirectory(templates_url)
-        except Exception:  # noqa: BLE001
-            pass
+    # Land in the active app's templates subfolder so the listing is already
+    # scoped to that application. Best-effort: if it can't be located the picker
+    # just opens at its last location.
+    templates_url = _templates_dir_url(ctx, module)
+    if templates_url:
+        picker.setDisplayDirectory(templates_url)
 
     if picker.execute() != OK:
         return None
@@ -145,12 +175,45 @@ def _pick_template(ctx, t, module):
     return uno.fileUrlToSystemPath(files[0]) if files else None
 
 
+def _documents_save_url(ctx):
+    """File URL of ``<My Documents>/LOUIM templates`` (created if needed), or None.
+
+    Teacher-made templates belong in a durable, user-owned location, not the
+    per-user extension cache (which is wiped on every reinstall/update). Uses
+    LibreOffice's configured "My Documents" path (``$(work)``), which is what the
+    user sees as their documents folder elsewhere in the app, then a stable
+    ``LOUIM templates`` subfolder under it. Best-effort: falls back to Documents
+    itself, then to ``None`` (picker opens at its last location).
+    """
+    try:
+        smgr = ctx.getServiceManager()
+        subst = smgr.createInstanceWithContext(
+            "com.sun.star.util.PathSubstitution", ctx
+        )
+        work_path = uno.fileUrlToSystemPath(
+            subst.substituteVariables("$(work)", True)
+        )
+    except Exception:  # noqa: BLE001
+        return None
+
+    target = os.path.join(work_path, _SAVE_SUBDIR)
+    try:
+        os.makedirs(target, exist_ok=True)
+        if os.path.isdir(target):
+            return uno.systemPathToFileUrl(target)
+        if os.path.isdir(work_path):
+            return uno.systemPathToFileUrl(work_path)
+    except Exception:  # noqa: BLE001
+        pass
+    return None
+
+
 def _pick_save_path(ctx, t, module):
     """Open a Save dialog for a new .louim template; return a path or None.
 
-    Defaults the file name to ``<app>-my-template.louim`` so a saved template
-    follows the per-application naming convention and shows under that app's
-    filter when applied later.
+    Defaults the file name to ``<app>-my-template.louim`` (the app prefix keeps
+    saved templates self-describing) and the directory to the user's
+    ``Documents/LOUIM templates`` folder so they persist across reinstalls.
     """
     from com.sun.star.ui.dialogs.ExecutableDialogResults import OK
     from com.sun.star.ui.dialogs.TemplateDescription import (
@@ -167,14 +230,11 @@ def _pick_save_path(ctx, t, module):
     picker.setCurrentFilter(t("filter_louim"))
     picker.setDefaultName("%s-my-template.louim" % module.key)
 
-    url = _package_url(ctx)
-    if url:
-        templates_url = url.rstrip("/") + "/templates"
-        try:
-            if os.path.isdir(uno.fileUrlToSystemPath(templates_url)):
-                picker.setDisplayDirectory(templates_url)
-        except Exception:  # noqa: BLE001
-            pass
+    # Default into the user's Documents/LOUIM templates folder so teacher-made
+    # templates persist (the extension cache is wiped on reinstall/update).
+    save_url = _documents_save_url(ctx)
+    if save_url:
+        picker.setDisplayDirectory(save_url)
 
     if picker.execute() != OK:
         return None

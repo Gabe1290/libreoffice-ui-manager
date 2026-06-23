@@ -352,10 +352,23 @@ Built and packaged clean (`python tools/build.py` → `dist/louim.oxt` contains
 the entry points and the three starter templates); loader tests still pass.
 Not yet GUI-verified (no display in this environment) — see task 1.
 
-The file picker now defaults to the deployed `templates/` folder, located via
-the `PackageInformationProvider` (refactored into `_package_url`, shared with
-`_ensure_package_path`). Best-effort: falls back to the picker's last location
-if the folder can't be resolved.
+The file picker filters by *location*, not by filename pattern: the bundled
+starter templates live in per-application subfolders (`templates/writer/`,
+`templates/calc/`, …) and the picker opens directly in the active app's
+subfolder (`_templates_dir_url`), so e.g. Writer shows only Writer templates.
+This uses the **native** `FilePicker` because (a) the native dialog filters
+reliably by folder but silently ignores prefix globs like `writer-*.louim`, and
+(b) the wildcard-capable `OfficeFilePicker` hits a Skia list-rendering glitch on
+locked-down Linux (filenames fail to paint at wider widths) and teachers there
+can't change the default. The deployed location is resolved via the
+`PackageInformationProvider` (`_package_url`, shared with
+`_ensure_package_path`); best-effort, falling back to the templates root and
+then the picker's last location if a folder can't be resolved.
+
+The **Save** dialog defaults elsewhere: to `<My Documents>/LOUIM templates`
+(`_documents_save_url`, via the `$(work)` path substitution, created on first
+use). Teacher-made templates must persist, and the per-user extension cache is
+wiped on every reinstall/update — so saving there would silently lose them.
 
 ## Engine Status (verified headlessly)
 
