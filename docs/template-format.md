@@ -13,6 +13,13 @@ the active document matches the template's application. The same sections
 application — only the UNO command IDs / resource URLs differ. Use
 `tools/discover-menus.py --module <app>` to list an app's IDs.
 
+The bundled starter templates are organized into per-application subfolders
+(`templates/writer/`, `templates/calc/`, `templates/impress/`,
+`templates/draw/`). The "apply" file picker opens in the active application's
+subfolder so it lists only that app's templates; navigating up one folder shows
+them all. Keep new templates in the subfolder matching their `application` field
+so this folder-based filtering keeps working.
+
 ## Design rule
 
 Templates must use LibreOffice UNO command IDs, not visible menu labels.

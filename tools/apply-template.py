@@ -10,7 +10,7 @@ Start LibreOffice with a listening socket first, e.g.:
 
 Then:
 
-    python3 tools/apply-template.py templates/writer-level-1.louim
+    python3 tools/apply-template.py templates/writer/writer-level-1.louim
     python3 tools/apply-template.py --restore
 
 The change persists in the LibreOffice user profile and affects all Writer
