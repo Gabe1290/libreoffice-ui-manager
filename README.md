@@ -11,7 +11,7 @@ Its goal is to help students and adult beginners learn word processing progressi
 ## Install
 
 1. Download `louim.oxt` from the
-   [latest release](https://github.com/Gabe1290/libreoffice-ui-manager/releases).
+   [latest release](https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/releases).
 2. In LibreOffice: **Tools ▸ Extension Manager… ▸ Add…**, pick `louim.oxt`, and
    restart LibreOffice.
 3. A **LibreOffice UI Manager** menu appears in Writer: *Apply Template…*,

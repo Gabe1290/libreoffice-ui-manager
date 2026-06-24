@@ -1,0 +1,17 @@
+# GitLab CI/CD — mirrors .github/workflows/build.yml.
+# Byte-compile, run the unit tests, build the .oxt, keep it as an artifact.
+stages:
+  - build
+
+build:
+  stage: build
+  image: python:3.11
+  script:
+    - python -m compileall -q src tools
+    - python -m unittest discover -s tests -v
+    - python tools/build.py
+  artifacts:
+    name: louim-oxt
+    paths:
+      - dist/louim.oxt
+    expire_in: 30 days

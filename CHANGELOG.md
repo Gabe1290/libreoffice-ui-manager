@@ -138,4 +138,4 @@ Writer**, driven entirely from the **LibreOffice UI Manager** menu.
 - Tested offline with `pytest` (64 tests) and verified live on isolated,
   throwaway LibreOffice instances — never against a user's working profile.
 
-[1.0.0]: https://github.com/Gabe1290/libreoffice-ui-manager/releases/tag/v1.0.0
+[1.0.0]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v1.0.0
