@@ -15,7 +15,12 @@
 #
 # The DeckList is shared across applications (it is not per-module config), so a
 # deck managed in two applications at once shares one ContextList; LOUIM tracks
-# each module's change in its own state file.
+# each module's change in its own state file. Each state record stores the
+# pre-hide ``original`` list and the ``result`` LOUIM wrote: if the live
+# ContextList still equals ``result``, restore writes ``original`` back
+# verbatim; otherwise another module changed the shared list since, and restore
+# re-adds only this module's own app entries, leaving the other module's hide
+# intact. Legacy records (a bare original list) are written back verbatim.
 #
 # The ContextList parsing/editing is pure Python (no ``uno``) and unit-tested.
 
@@ -75,6 +80,30 @@ def strip_module(context_list, module=WRITER):
     return out
 
 
+def merge_context_list(current, original, module=WRITER):
+    """A ContextList showing the deck in ``module`` again, keeping other hides.
+
+    Used when the live list no longer matches what LOUIM wrote (another module
+    hid or restored the same deck since). For every ``original`` entry that made
+    the deck visible in this module ("any", one of the module's app groups, or a
+    shared group), appends entries for the module's own plain app groups with
+    the same "Context, State" remainder — never "any" or a shared group, so
+    another module's hide is not undone. Entries already present are not
+    duplicated.
+    """
+    plain_apps = [a for a in module.deck_apps if a not in module.deck_group_subs]
+    out = list(current)
+    for entry in original:
+        app = _app_of(entry)
+        if app == "any" or app in module.deck_apps:
+            rest = _rest_of(entry)
+            for keep in plain_apps:
+                candidate = "%s, %s" % (keep, rest) if rest else keep
+                if candidate not in out:
+                    out.append(candidate)
+    return out
+
+
 # --- configuration access (uno) ----------------------------------------------
 
 def _config_provider(ctx):
@@ -122,6 +151,26 @@ def _set_context_list(provider, deck_id, entries):
     value = uno.Any("[]string", tuple(entries))
     uno.invoke(upd, "setPropertyValue", ("ContextList", value))
     upd.commitChanges()
+
+
+def _restore_context_list(provider, deck_id, record, module):
+    """Restore a deck's ContextList from a state record.
+
+    Exact undo (write ``original`` back) when the live list is still what LOUIM
+    wrote; compositional (re-add this module's app entries) when another module
+    changed the shared list since. Legacy records — a bare original list from
+    older LOUIM — are written back verbatim.
+    """
+    if not isinstance(record, dict):
+        _set_context_list(provider, deck_id, record)
+        return
+    original = list(record.get("original") or [])
+    current = _context_list(provider, deck_id)
+    if current == list(record.get("result") or []):
+        _set_context_list(provider, deck_id, original)
+    else:
+        _set_context_list(provider, deck_id,
+                          merge_context_list(current, original, module))
 
 
 def state_path(ctx, module=WRITER):
@@ -205,8 +254,9 @@ def apply_sidebar_profile(ctx, sidebar, module=WRITER, path=None):
     ``sidebar`` maps deck Ids to booleans (True = visible, False = hidden). Decks
     not mentioned are left untouched. Returns the list of deck Ids hidden.
 
-    Original ContextList values are saved to the state file before the first
-    change so the exact pre-LOUIM state can be restored, even across restarts.
+    The pre-hide ContextList and the value LOUIM wrote are both saved to the
+    state file before the first change, so restore can undo exactly — or compose
+    with another module's hide of the same deck (see ``_restore_context_list``).
     """
     path = path or state_path(ctx, module)
     provider = _config_provider(ctx)
@@ -221,32 +271,41 @@ def apply_sidebar_profile(ctx, sidebar, module=WRITER, path=None):
 
         if visible is False:
             if shows_in_module(current, module):
-                if deck_id not in state:
-                    state[deck_id] = current  # remember the original
-                _set_context_list(provider, deck_id, strip_module(current, module))
+                record = state.get(deck_id)
+                if not isinstance(record, dict):
+                    # First hide, or a legacy bare-list record to upgrade.
+                    record = {"original": record if record is not None
+                              else current}
+                stripped = strip_module(current, module)
+                _set_context_list(provider, deck_id, stripped)
+                record["result"] = stripped
+                state[deck_id] = record
             hidden.append(deck_id)
         else:
             # Explicitly visible: restore original if we had hidden it.
             if deck_id in state:
-                _set_context_list(provider, deck_id, state.pop(deck_id))
+                _restore_context_list(provider, deck_id, state.pop(deck_id),
+                                      module)
 
     _save_state(path, state)
     return hidden
 
 
 def restore_sidebar_decks(ctx, module=WRITER, path=None):
-    """Restore every sidebar deck LOUIM hid to its original ContextList.
+    """Restore every sidebar deck LOUIM hid in ``module``.
 
-    Returns the list of deck Ids restored.
+    Exact where possible, compositional where another module still hides the
+    same deck (see ``_restore_context_list``). Returns the list of deck Ids
+    restored.
     """
     path = path or state_path(ctx, module)
     provider = _config_provider(ctx)
     state = _load_state(path)
 
     restored = []
-    for deck_id, original in list(state.items()):
+    for deck_id, record in list(state.items()):
         try:
-            _set_context_list(provider, deck_id, original)
+            _restore_context_list(provider, deck_id, record, module)
             restored.append(deck_id)
         except Exception:  # noqa: BLE001
             pass

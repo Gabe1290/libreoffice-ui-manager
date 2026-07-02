@@ -11,7 +11,7 @@
 
 import json
 
-TEMPLATE_VERSION = 1
+from louim.template.loader import TEMPLATE_VERSION
 
 
 def assemble_template(name, description, menus, addons=None, toolbars=None,
@@ -20,10 +20,10 @@ def assemble_template(name, description, menus, addons=None, toolbars=None,
 
     ``menus`` / ``addons`` / ``toolbars`` / ``sidebar`` / ``toolbaritems`` map
     identifiers to booleans, as the discovery snapshots produce. ``application``
-    is the module key ("writer"/"calc"). The result is the exact structure
-    ``loader`` validates and the Apply Engine consumes. Empty maps for the
-    optional sections are still emitted; ``toolbaritems`` is added only when
-    non-empty so an exported template stays concise.
+    is the module key ("writer", "calc", "impress", or "draw"). The result is
+    the exact structure ``loader`` validates and the Apply Engine consumes.
+    Empty maps for the optional sections are still emitted; ``toolbaritems`` is
+    added only when non-empty so an exported template stays concise.
     """
     template = {
         "version": TEMPLATE_VERSION,

@@ -129,7 +129,9 @@ Because `true` genuinely forces a toolbar visible, it can turn an
 optional-but-off toolbar on — that is how the bundled `writer-level-1` shows the
 Drawing toolbar. Do not list a **contextual** toolbar (one shown only in a
 context, e.g. `tableobjectbar` inside a table) as `true`, or it will be pinned
-open everywhere. The bundled templates only manage ordinary toggleable toolbars.
+open everywhere. The bundled templates only manage ordinary toggleable toolbars,
+and for the same reason **Save Current Layout as Template…** never exports a
+contextual toolbar as `true` (an explicit hide of one is still captured).
 
 "Restore Full Menus" returns every toolbar LOUIM hid to exactly the state it
 had before (including removing a window-state entry LOUIM had to create).
@@ -146,6 +148,9 @@ it removed — there are two fields:
 - `toolbaritems` — a map of UNO command ID → boolean. Any command marked `false`
   has its button removed from every toolbar that holds it (at any depth,
   including dropdown sub-items). These are the same `.uno:` IDs used in `menus`.
+  Note that this is per **command**, not per toolbar: a button you hid on one
+  toolbar but kept on another is exported as hidden and will be removed from
+  both on apply.
 - `hide_toolbar_buttons_with_menus` — a boolean. When `true`, every command you
   hide in `menus` also has its toolbar button removed — and hiding a whole
   top-level menu (e.g. `.uno:InsertMenu`) removes the toolbar buttons for the
@@ -189,14 +194,15 @@ Styles, Gallery, Navigator, …). It maps a deck's stable **Id** to a boolean
 Deck Ids are language-independent (e.g. `GalleryDeck`, `StyleListDeck`,
 `NavigatorDeck`, `PropertyDeck`). Decks not listed keep their current state.
 
-Hiding works like the `addons` section: LOUIM removes Writer from the deck's
-`ContextList` (saving the original first), so the deck stops appearing in
-Writer's sidebar but stays available in Calc/Draw/etc. "Restore Full Menus"
-returns every deck LOUIM hid to its original context. Changes take effect for
-newly opened Writer windows.
+Hiding works like the `addons` section: LOUIM removes the active application
+from the deck's `ContextList` (saving the original first), so the deck stops
+appearing in that application's sidebar but stays available in the others.
+"Restore Full Menus" brings every deck LOUIM hid back — and it composes across
+applications, so restoring in one app never disturbs a hide still applied in
+another. Changes take effect for newly opened windows.
 
-Run `tools/discover-menus.py` to list the sidebar decks available in Writer and
-their Ids.
+Run `tools/discover-menus.py --module <app>` to list the sidebar decks
+available in an application and their Ids.
 
 ## Creating and editing your own templates
 

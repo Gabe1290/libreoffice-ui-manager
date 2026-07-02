@@ -3,6 +3,45 @@
 All notable changes to LibreOffice UI Manager (LOUIM) are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.1.0] — 2026-07-02
+
+### Fixed
+
+- The "wrong application" message now tells you to open a document of the
+  **template's** application ("Open a Calc document…") instead of the one you
+  are already in.
+- The restore confirmation names the **active application** ("Restored the full
+  Calc interface.") instead of always saying Writer, in all four languages.
+- Restoring an addon menu or sidebar deck hidden in **two applications** no
+  longer disturbs the other application's hide: the state files now record both
+  the pre-hide value and what LOUIM wrote, so restore undoes exactly when it
+  can and re-adds only its own application's entries when the other app still
+  hides the item. Old state files are still understood.
+- **Save Current Layout** no longer exports contextual toolbars
+  (`tableobjectbar`, `frameobjectbar`, `graphicobjectbar`) as visible —
+  applying such a template would have pinned them open outside their context.
+  An explicit hide of one is still captured.
+- Templates from a **newer LOUIM** (`version` above 1) are now refused with a
+  clear message instead of being applied partially; a malformed `profile`
+  section is reported as an invalid template instead of a raw error.
+- `tools/verify-toolbars.py` works again (it referenced a symbol removed in the
+  2.0.0 module refactor) and takes `--module` like the other dev tools.
+
+### Changed
+
+- The template picker filters by **folder**: it opens in the active
+  application's bundled `templates/<app>/` subfolder (replacing the 4.0.2
+  filename-pattern filter, which the native dialog ignored on some platforms).
+  Navigating up one folder shows every application's templates.
+- **Save Current Layout** defaults to `Documents/LOUIM templates/`, so
+  teacher-made templates survive extension reinstalls and updates.
+- The project is now formally licensed under the **Mozilla Public License 2.0**.
+
+### Removed
+
+- `tools/create-project-md.sh`, a stale scaffold that overwrote PROJECT.md with
+  obsolete content.
+
 ## [4.0.2] — 2026-06-20
 
 ### Changed

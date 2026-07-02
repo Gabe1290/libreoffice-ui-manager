@@ -6,6 +6,10 @@
 
 import json
 
+# Highest .louim format version this LOUIM understands. Lives here (not in
+# saver.py) because the loader is the compatibility gate; the saver imports it.
+TEMPLATE_VERSION = 1
+
 # Template "application" values LOUIM can apply (LibreOffice module keys).
 SUPPORTED_APPLICATIONS = ("writer", "calc", "impress", "draw")
 
@@ -30,11 +34,33 @@ def load_template(path):
 
     if not isinstance(data, dict):
         raise TemplateError("template root must be a JSON object")
+
+    # A missing version means the original (v1) format; a newer one means the
+    # file was made for a newer LOUIM and applying it partially would be worse
+    # than refusing.
+    version = data.get("version", TEMPLATE_VERSION)
+    if not isinstance(version, int) or isinstance(version, bool):
+        raise TemplateError("'version' must be an integer, got %r" % version)
+    if version > TEMPLATE_VERSION:
+        raise TemplateError(
+            "template version %d is newer than this LOUIM supports (up to %d) "
+            "— update the extension" % (version, TEMPLATE_VERSION)
+        )
+
     if data.get("application") not in SUPPORTED_APPLICATIONS:
         raise TemplateError(
             "unsupported application: %r (supported: %s)"
             % (data.get("application"), ", ".join(SUPPORTED_APPLICATIONS))
         )
+
+    profile = data.get("profile", {})
+    if not isinstance(profile, dict):
+        raise TemplateError("'profile' must be a JSON object")
+    for field in ("name", "description"):
+        if not isinstance(profile.get(field, ""), str):
+            raise TemplateError(
+                "profile %r must be a string, got %r" % (field, profile.get(field))
+            )
 
     _validate_bool_map(data.get("menus", {}), "menus", "menu")
     _validate_bool_map(data.get("addons", {}), "addons", "addon")

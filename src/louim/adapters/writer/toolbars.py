@@ -33,15 +33,18 @@ _STATE_FILENAME = "louim-toolbar-state-%s.json"
 # noise; exporting only these (plus anything explicitly hidden) keeps a saved
 # template readable. Tuned for Writer; harmless elsewhere (non-matching names are
 # simply absent from another module's snapshot).
+#
+# Deliberately excludes *contextual* toolbars (tableobjectbar, frameobjectbar,
+# graphicobjectbar — shown only inside a table/frame/image): their persisted
+# Visible flag is normally true, so exporting them would write ``true`` into the
+# template and applying it would pin them open outside their context. An
+# explicit hide of one still survives curation via the ``visible is False`` rule.
 CURATED_TOOLBARS = (
     TOOLBAR_PREFIX + "standardbar",
     TOOLBAR_PREFIX + "textobjectbar",
     TOOLBAR_PREFIX + "findbar",
     TOOLBAR_PREFIX + "insertbar",
     TOOLBAR_PREFIX + "drawbar",
-    TOOLBAR_PREFIX + "tableobjectbar",
-    TOOLBAR_PREFIX + "frameobjectbar",
-    TOOLBAR_PREFIX + "graphicobjectbar",
     TOOLBAR_PREFIX + "formcontrols",
     TOOLBAR_PREFIX + "mailmerge",
 )

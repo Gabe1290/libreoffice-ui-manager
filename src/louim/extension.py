@@ -72,9 +72,10 @@ def _translator(ctx):
     try:
         from louim.i18n import translator, office_language
         return translator(office_language(ctx))
-    except Exception:  # noqa: BLE001
-        from louim.i18n import translator
-        return translator("en")
+    except Exception:  # noqa: BLE001 — bundled package unavailable: echo keys
+        # so the caller still gets a working t(); the real failure surfaces
+        # when the engine imports are attempted and reported via _error_box.
+        return lambda key, *args: key
 
 
 def _current_module(ctx):
@@ -270,10 +271,10 @@ def apply_template(*args):
 
         # The template must target the application you are in.
         if template.get("application") != module.key:
+            template_app = str(template.get("application")).capitalize()
             _message_box(ctx, t("invalid_title"),
-                         t("wrong_module_body",
-                           str(template.get("application")).capitalize(),
-                           module.key.capitalize(), module.key.capitalize()))
+                         t("wrong_module_body", template_app,
+                           module.key.capitalize(), template_app))
             return
 
         hidden = apply_menu_profile(ctx, template.get("menus", {}), module)
@@ -313,7 +314,8 @@ def restore_menus(*args):
         restore_toolbars(ctx, module)
         restore_toolbar_items(ctx, module)
         restore_sidebar_decks(ctx, module)
-        _message_box(ctx, t("product"), t("restore_body"))
+        _message_box(ctx, t("product"),
+                     t("restore_body", module.key.capitalize()))
     except Exception as exc:  # noqa: BLE001
         _error_box(ctx, exc)
 

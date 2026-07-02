@@ -5,7 +5,7 @@ LibreOffice interface.
 
 Its goal is to help students and adult beginners learn word processing progressively, without being overwhelmed by too many menus and options.
 
-**Version 4.0.0** — stable release for LibreOffice **Writer**, **Calc**,
+**Version 4.1.0** — stable release for LibreOffice **Writer**, **Calc**,
 **Impress**, and **Draw**. Available in English, French, German, and Italian.
 
 ## Install
@@ -36,3 +36,8 @@ Students can import a template and work with a simplified LibreOffice Writer or 
 ## Template format
 
 Templates use the `.louim` extension and are written in JSON.
+
+## License
+
+LOUIM is free software, released under the
+[Mozilla Public License 2.0](LICENSE).

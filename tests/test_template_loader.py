@@ -142,6 +142,51 @@ class LoadTemplateTest(unittest.TestCase):
             with self.assertRaises(TemplateError):
                 load_template(bad)
 
+    def test_toolbaritems_optional_and_validated(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = _write(d, {"application": "writer", "menus": {},
+                              "toolbaritems": {".uno:InsertTable": False}})
+            loaded = load_template(path)
+            self.assertEqual(loaded["toolbaritems"][".uno:InsertTable"], False)
+            bad = _write(d, {"application": "writer", "menus": {},
+                             "toolbaritems": {".uno:InsertTable": "no"}})
+            with self.assertRaises(TemplateError):
+                load_template(bad)
+
+    def test_missing_version_accepted(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = _write(d, {"application": "writer", "menus": {}})
+            self.assertEqual(load_template(path)["application"], "writer")
+
+    def test_future_version_rejected(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = _write(d, {"application": "writer", "version": 2,
+                              "menus": {}})
+            with self.assertRaises(TemplateError):
+                load_template(path)
+
+    def test_non_integer_version_rejected(self):
+        with tempfile.TemporaryDirectory() as d:
+            for bad_version in ("1", 1.5, True):
+                path = _write(d, {"application": "writer",
+                                  "version": bad_version, "menus": {}})
+                with self.assertRaises(TemplateError):
+                    load_template(path)
+
+    def test_profile_must_be_object(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = _write(d, {"application": "writer", "menus": {},
+                              "profile": "oops"})
+            with self.assertRaises(TemplateError):
+                load_template(path)
+
+    def test_profile_name_must_be_string(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = _write(d, {"application": "writer", "menus": {},
+                              "profile": {"name": 3}})
+            with self.assertRaises(TemplateError):
+                load_template(path)
+
 
 if __name__ == "__main__":
     unittest.main()

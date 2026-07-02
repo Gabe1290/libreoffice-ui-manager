@@ -74,14 +74,14 @@ _STRINGS = {
                "Apri un documento %s e applicalo lì."),
     },
     "restore_body": {
-        "en": ("Restored the full Writer interface.\n"
+        "en": ("Restored the full %s interface.\n"
                "Reopen the document if the interface has not refreshed."),
-        "fr": ("Interface complète de Writer restaurée.\n"
+        "fr": ("Interface complète de %s restaurée.\n"
                "Rouvrez le document si l'interface ne s'est pas actualisée."),
-        "de": ("Die vollständige Writer-Oberfläche wurde wiederhergestellt.\n"
+        "de": ("Die vollständige %s-Oberfläche wurde wiederhergestellt.\n"
                "Öffnen Sie das Dokument erneut, falls die Oberfläche nicht "
                "aktualisiert wurde."),
-        "it": ("Interfaccia completa di Writer ripristinata.\n"
+        "it": ("Interfaccia completa di %s ripristinata.\n"
                "Riapri il documento se l'interfaccia non si è aggiornata."),
     },
     "error_title": {
