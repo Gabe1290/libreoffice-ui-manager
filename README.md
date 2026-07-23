@@ -1,5 +1,8 @@
 # LibreOffice UI Manager
 
+> **📢 This project has moved to GitLab — [gitlab.com/gthullen-group/libreoffice-ui-manager](https://gitlab.com/gthullen-group/libreoffice-ui-manager).**
+> Development, issues, and releases now happen there. This GitHub repository is a read-only mirror.
+
 LibreOffice UI Manager (LOUIM) is an educational tool for simplifying the
 LibreOffice interface.
 
