@@ -8,7 +8,7 @@ Its goal is simple:
 
 Many students and adult beginners are overwhelmed by the full LibreOffice interface. LOUIM allows teachers to reveal only the tools needed for the current learning objective, then progressively introduce more features.
 
-LOUIM is not a lockdown tool. It is a learning tool.
+LOUIM is a learning tool, not a lockdown tool.
 
 ## Long-term vision
 

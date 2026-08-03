@@ -61,9 +61,7 @@ Templates store UNO command identifiers.
 
 # Educational Philosophy
 
-LOUIM is not intended to hide functionality permanently.
-
-Its purpose is to simplify learning.
+LOUIM's purpose is to simplify learning, not to hide functionality permanently.
 
 Teachers remain in complete control of the learning progression.
 

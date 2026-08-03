@@ -6,7 +6,7 @@ LOUIM is an educational LibreOffice extension designed to progressively simplify
 
 It helps teachers reduce cognitive overload by showing only the tools needed for the current learning step.
 
-LOUIM is not primarily a lockdown tool. It is a learning tool.
+LOUIM is a learning tool, not primarily a lockdown tool.
 
 ## Current Milestone
 

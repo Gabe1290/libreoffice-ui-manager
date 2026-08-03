@@ -40,8 +40,6 @@ The same template should work across all supported platforms.
 
 ## 7. Not a Lockdown Tool
 
-LOUIM is not primarily designed to restrict users.
-
-It is designed to simplify the interface for learning.
+LOUIM is designed to simplify the interface for learning, not primarily to restrict users.
 
 Administrative locking may be added later, but it is not part of the initial goal.
