@@ -3,6 +3,40 @@
 All notable changes to LibreOffice UI Manager (LOUIM) are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.2.0] - 2026-08-03
+
+Reconciles the audit-fix work released on the GitHub mirror (tagged 4.1.0 there)
+into the main history, and adds cross-application restore verification tooling.
+
+### Fixed
+
+- The "wrong application" message now names the *template's* application
+  ("Open a Calc document...") instead of the one you are already in.
+- The restore confirmation names the *active application* ("Restored the full
+  Calc interface.") in all four languages, instead of always saying Writer.
+- Restoring an addon menu or sidebar deck hidden in *two applications* no longer
+  disturbs the other application's hide: state files now record both the
+  pre-hide value and what LOUIM wrote. Old state files are still understood.
+- **Save Current Layout** no longer exports contextual toolbars
+  (`tableobjectbar`, `frameobjectbar`, `graphicobjectbar`) as visible.
+- Templates from a newer LOUIM (`version` above 1) are refused with a clear
+  message; a malformed `profile` section is reported as invalid.
+- `tools/verify-toolbars.py` works again and takes `--module`.
+
+### Added
+
+- `tools/verify-restore.py` - live cross-application restore/export checker
+  (throwaway instances only), plus `tests/test_addon_context.py` offline
+  coverage.
+
+### Changed
+
+- The project is now formally licensed under the **Mozilla Public License 2.0**.
+
+### Removed
+
+- `tools/create-project-md.sh`, a stale scaffold that overwrote PROJECT.md.
+
 ## [4.1.1] — 2026-08-03
 
 ### Fixed
@@ -170,6 +204,7 @@ Writer**, driven entirely from the **LibreOffice UI Manager** menu.
 - Tested offline with `pytest` (64 tests) and verified live on isolated,
   throwaway LibreOffice instances — never against a user's working profile.
 
+[4.2.0]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v4.2.0
 [4.1.1]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v4.1.1
 [4.1.0]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v4.1.0
 [1.0.0]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v1.0.0

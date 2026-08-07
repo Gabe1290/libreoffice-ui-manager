@@ -45,6 +45,14 @@ class StringTableTest(unittest.TestCase):
             self.assertIn("layout.louim",
                           translator(lang)("export_body", "layout.louim"))
 
+    def test_restore_body_names_the_application(self):
+        # Restore acts on the active application, so the message must carry
+        # its name (it used to hardcode "Writer").
+        for lang in SUPPORTED_LANGS:
+            out = translator(lang)("restore_body", "Calc")
+            self.assertIn("Calc", out)
+            self.assertNotIn("Writer", out)
+
 
 class TranslatorTest(unittest.TestCase):
     def test_unknown_language_falls_back_to_english(self):

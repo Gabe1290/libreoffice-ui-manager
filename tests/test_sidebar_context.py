@@ -12,9 +12,9 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from louim.adapters.writer.sidebar import (  # noqa: E402
-    shows_in_module, strip_module,
+    shows_in_module, strip_module, merge_context_list,
 )
-from louim.adapters.modules import WRITER, CALC, IMPRESS  # noqa: E402
+from louim.adapters.modules import WRITER, CALC, IMPRESS, DRAW  # noqa: E402
 
 
 class ShowsInModuleTest(unittest.TestCase):
@@ -88,6 +88,71 @@ class ImpressGroupTest(unittest.TestCase):
 
     def test_plain_impress_entry_dropped(self):
         self.assertEqual(strip_module(["Impress, any, visible"], IMPRESS), [])
+
+
+def _restore(current, record, module):
+    """The ContextList restore writes: exact undo, or compositional re-add."""
+    if current == record["result"]:
+        return record["original"]
+    return merge_context_list(current, record["original"], module)
+
+
+class MergeContextListTest(unittest.TestCase):
+    def test_any_original_readds_only_module_apps(self):
+        merged = merge_context_list(["Chart, any, visible"],
+                                    ["any, any, visible"], WRITER)
+        self.assertTrue(shows_in_module(merged, WRITER))
+        # "any" itself is never re-added — Calc's hide would be undone.
+        self.assertFalse(shows_in_module(merged, CALC))
+        self.assertIn("Chart, any, visible", merged)
+
+    def test_group_original_readds_plain_app_only(self):
+        # Restoring Impress from a shared DrawImpress entry must not
+        # resurrect the deck in Draw (which may still hide it).
+        merged = merge_context_list([], ["DrawImpress, any, visible"], IMPRESS)
+        self.assertEqual(merged, ["Impress, any, visible"])
+        self.assertTrue(shows_in_module(merged, IMPRESS))
+        self.assertFalse(shows_in_module(merged, DRAW))
+
+    def test_no_duplicates(self):
+        merged = merge_context_list(["Calc, any, visible"],
+                                    ["Calc, any, visible"], CALC)
+        self.assertEqual(merged, ["Calc, any, visible"])
+
+    def test_unrelated_original_adds_nothing(self):
+        merged = merge_context_list(["Chart, any, visible"],
+                                    ["Math, any, visible"], WRITER)
+        self.assertEqual(merged, ["Chart, any, visible"])
+
+
+class CrossModuleRestoreScenarioTest(unittest.TestCase):
+    """Hide the same deck in Writer and Calc, restore in both orders."""
+
+    def _hide_both(self):
+        original = ["any, any, visible"]
+        result_w = strip_module(original, WRITER)
+        record_w = {"original": original, "result": result_w}
+        result_c = strip_module(result_w, CALC)
+        record_c = {"original": result_w, "result": result_c}
+        return record_w, record_c, result_c
+
+    def test_restore_in_hide_order_keeps_calc_hidden(self):
+        record_w, record_c, current = self._hide_both()
+        current = _restore(current, record_w, WRITER)
+        self.assertTrue(shows_in_module(current, WRITER))
+        self.assertFalse(shows_in_module(current, CALC))
+        current = _restore(current, record_c, CALC)
+        self.assertTrue(shows_in_module(current, WRITER))
+        self.assertTrue(shows_in_module(current, CALC))
+
+    def test_restore_in_reverse_order_is_exact(self):
+        record_w, record_c, current = self._hide_both()
+        current = _restore(current, record_c, CALC)
+        self.assertTrue(shows_in_module(current, CALC))
+        self.assertFalse(shows_in_module(current, WRITER))
+        # Writer's turn finds the list exactly as it left it: pristine undo.
+        current = _restore(current, record_w, WRITER)
+        self.assertEqual(current, ["any, any, visible"])
 
 
 if __name__ == "__main__":

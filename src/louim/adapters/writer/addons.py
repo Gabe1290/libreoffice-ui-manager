@@ -9,15 +9,24 @@
 # Each addon menu has a ``Context`` property: a comma-separated list of document
 # service names where the menu appears. An empty Context means "all modules".
 # To hide an addon menu from a module we remove that module's services from its
-# Context (a user-level config override); to restore it we write the saved
-# original Context back. The change takes effect for newly opened windows.
+# Context (a user-level config override).
+#
+# The Context is ONE value shared by every application, but LOUIM tracks state
+# per module, so restore must compose with hides other modules still hold. Each
+# state record stores the pre-hide ``original`` and the ``result`` LOUIM wrote:
+# if the live Context still equals ``result`` (nothing else changed it), restore
+# writes ``original`` back verbatim; otherwise it re-adds only this module's
+# services, leaving the other modules' hides intact. Legacy state files (a bare
+# original string) are written back verbatim, as older LOUIM did. Changes take
+# effect for newly opened windows.
 
 import json
 import os
 
-import uno
-
 from louim.adapters.modules import WRITER
+
+# ``uno`` is imported lazily inside the helpers that need it, so this module
+# (and pure helpers like ``_merge_context``) imports without LibreOffice.
 
 ADDONS_NODE = "/org.openoffice.Office.Addons/AddonUI/OfficeMenuBar"
 
@@ -34,6 +43,7 @@ def _config_provider(ctx):
 
 
 def _make_nodepath_arg(node):
+    import uno
     arg = uno.createUnoStruct("com.sun.star.beans.PropertyValue")
     arg.Name = "nodepath"
     arg.Value = node
@@ -68,6 +78,26 @@ def _shows_in_module(context, module):
         return True  # empty Context = all modules
     parts = _split(context)
     return any(c in parts for c in module.addon_contexts)
+
+
+def _merge_context(current, original, module):
+    """A Context showing the addon in ``module`` again, keeping other hides.
+
+    Used when the live Context no longer matches what LOUIM wrote (another
+    module hid or restored the same addon since). Re-adds only the services
+    ``original`` granted this module — everything another module removed stays
+    removed. An empty ``original`` (= all modules) grants all of this module's
+    services. Pure, unit-tested.
+    """
+    parts = _split(current)
+    if original and original.strip():
+        granted = [c for c in _split(original) if c in module.addon_contexts]
+    else:
+        granted = list(module.addon_contexts)
+    for c in granted:
+        if c not in parts:
+            parts.append(c)
+    return ",".join(parts)
 
 
 def state_path(ctx, module=WRITER):
@@ -159,6 +189,25 @@ def _set_context(provider, node, value):
     upd.commitChanges()
 
 
+def _restore_context(provider, node, record, module):
+    """Restore a node's Context from a state record.
+
+    Exact undo (write ``original`` back) when the live value is still what LOUIM
+    wrote; compositional (re-add this module's services) when another module
+    changed the shared value since. Legacy records — a bare original string from
+    older LOUIM — are written back verbatim.
+    """
+    if not isinstance(record, dict):
+        _set_context(provider, node, record)
+        return
+    original = record.get("original", "")
+    current = _context_of(provider, node)
+    if current == record.get("result"):
+        _set_context(provider, node, original)
+    else:
+        _set_context(provider, node, _merge_context(current, original, module))
+
+
 def apply_addon_profile(ctx, addons, module=WRITER, path=None):
     """Hide/show extension menus in ``module`` per an "addons" profile.
 
@@ -166,8 +215,9 @@ def apply_addon_profile(ctx, addons, module=WRITER, path=None):
     hidden). Nodes not mentioned are left untouched. Returns the list of node
     names that were hidden.
 
-    Original Context values are saved to the state file before the first change
-    so the exact pre-LOUIM state can be restored later, even across restarts.
+    The pre-hide Context and the value LOUIM wrote are both saved to the state
+    file before the first change, so restore can undo exactly — or compose with
+    another module's hide of the same addon (see ``_restore_context``).
     """
     path = path or state_path(ctx, module)
     provider = _config_provider(ctx)
@@ -184,36 +234,43 @@ def apply_addon_profile(ctx, addons, module=WRITER, path=None):
 
         if visible is False:
             if _shows_in_module(current, module):
-                if node not in state:
-                    state[node] = current  # remember the original
+                record = state.get(node)
+                if not isinstance(record, dict):
+                    # First hide, or a legacy bare-string record to upgrade.
+                    record = {"original": record if record is not None
+                              else current}
                 remaining = [c for c in _split(current)
                              if c not in module.addon_contexts]
                 new = ",".join(remaining) if remaining \
                     else ",".join(module.other_addon_contexts)
                 _set_context(provider, node, new)
+                record["result"] = new
+                state[node] = record
             hidden.append(node)
         else:
             # Explicitly visible: restore original if we had hidden it.
             if node in state:
-                _set_context(provider, node, state.pop(node))
+                _restore_context(provider, node, state.pop(node), module)
 
     _save_state(path, state)
     return hidden
 
 
 def restore_addon_menus(ctx, module=WRITER, path=None):
-    """Restore every addon menu LOUIM hid to its original Context.
+    """Restore every addon menu LOUIM hid in ``module``.
 
-    Returns the list of node names restored.
+    Exact where possible, compositional where another module still hides the
+    same addon (see ``_restore_context``). Returns the list of node names
+    restored.
     """
     path = path or state_path(ctx, module)
     provider = _config_provider(ctx)
     state = _load_state(path)
 
     restored = []
-    for node, original in list(state.items()):
+    for node, record in list(state.items()):
         try:
-            _set_context(provider, node, original)
+            _restore_context(provider, node, record, module)
             restored.append(node)
         except Exception:  # noqa: BLE001
             pass

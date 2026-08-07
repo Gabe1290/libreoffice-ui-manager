@@ -40,6 +40,17 @@ class CurateToolbarsTest(unittest.TestCase):
         for url in CURATED_TOOLBARS:
             self.assertTrue(url.startswith(TOOLBAR_PREFIX))
 
+    def test_contextual_toolbars_not_curated(self):
+        # Exporting a contextual toolbar as ``true`` would pin it open outside
+        # its context on apply, so curation must drop it when visible…
+        for name in ("tableobjectbar", "frameobjectbar", "graphicobjectbar"):
+            resource = TOOLBAR_PREFIX + name
+            self.assertNotIn(resource, CURATED_TOOLBARS)
+            self.assertEqual(curate_toolbars({resource: True}), {})
+            # …but keep an explicit, intentional hide.
+            self.assertEqual(curate_toolbars({resource: False}),
+                             {resource: False})
+
 
 if __name__ == "__main__":
     unittest.main()

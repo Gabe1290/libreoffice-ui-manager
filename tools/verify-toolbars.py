@@ -22,10 +22,10 @@ import uno  # noqa: E402
 from louim.adapters.writer.toolbars import (  # noqa: E402
     apply_toolbar_profile,
     restore_toolbars,
-    WINDOWSTATE_NODE,
     _config_provider,
     _read_access,
 )
+from louim.adapters.modules import get_module  # noqa: E402
 
 
 def connect(host, port):
@@ -38,9 +38,9 @@ def connect(host, port):
     )
 
 
-def state_of(ctx, resource):
-    """Return (exists, visible) for a toolbar in the window-state config."""
-    states = _read_access(_config_provider(ctx), WINDOWSTATE_NODE)
+def state_of(ctx, module, resource):
+    """Return (exists, visible) for a toolbar in the module's window-state config."""
+    states = _read_access(_config_provider(ctx), module.windowstate_node)
     if not states.hasByName(resource):
         return (False, None)
     try:
@@ -54,7 +54,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default="localhost")
     parser.add_argument("--port", type=int, default=2002)
+    parser.add_argument("--module", default="writer",
+                        choices=("writer", "calc", "impress", "draw"),
+                        help="application whose toolbars to check (default: writer)")
     args = parser.parse_args()
+    module = get_module(args.module)
 
     ctx = connect(args.host, args.port)
     targets = [
@@ -66,23 +70,24 @@ def main():
     with tempfile.TemporaryDirectory() as d:
         path = str(Path(d) / "state.json")
 
-        before = {r: state_of(ctx, r) for r in targets}
+        before = {r: state_of(ctx, module, r) for r in targets}
         for r in targets:
             print("BEFORE  %-44s exists=%s visible=%s" % (r, *before[r]))
 
-        hidden = apply_toolbar_profile(ctx, {r: False for r in targets}, path=path)
+        hidden = apply_toolbar_profile(ctx, {r: False for r in targets}, module,
+                                       path=path)
         print("\napply hid: %s" % ", ".join(hidden))
         for r in targets:
-            exists, visible = state_of(ctx, r)
+            exists, visible = state_of(ctx, module, r)
             hid_ok = exists and visible is False
             ok = ok and hid_ok
             print("HIDDEN  %-44s exists=%s visible=%s  %s"
                   % (r, exists, visible, "OK" if hid_ok else "FAIL"))
 
-        restored = restore_toolbars(ctx, path=path)
+        restored = restore_toolbars(ctx, module, path=path)
         print("\nrestore put back: %s" % ", ".join(restored))
         for r in targets:
-            after = state_of(ctx, r)
+            after = state_of(ctx, module, r)
             match = after == before[r]
             ok = ok and match
             print("RESTORED %-43s exists=%s visible=%s  %s"
