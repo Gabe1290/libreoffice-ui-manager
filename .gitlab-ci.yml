@@ -1,5 +1,17 @@
-# GitLab CI/CD - byte-compile, run unit tests, build the .oxt artifact.
+# GitLab CI/CD - byte-compile, run unit tests, build the .oxt, and (on a version
+# tag) publish a Release with the .oxt attached via the generic Package Registry.
+# Pure ASCII only: GitLab rejects this file if it contains non-ASCII bytes.
+
+stages:
+  - build
+  - release
+
+variables:
+  PKG_NAME: "louim"
+  OXT: "louim.oxt"
+
 build:
+  stage: build
   image: python:3.11
   script:
     - python -m compileall -q src tools
@@ -9,3 +21,39 @@ build:
     paths:
       - dist/louim.oxt
     expire_in: 30 days
+
+# On a version tag (vX.Y.Z): upload the built .oxt to the generic Package
+# Registry and extract this version's section from CHANGELOG.md for the notes.
+upload:
+  stage: release
+  image: python:3.11
+  rules:
+    - if: '$CI_COMMIT_TAG'
+  script:
+    - 'VERSION="${CI_COMMIT_TAG#v}"'
+    - 'PKG_URL="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${PKG_NAME}/${VERSION}/${PKG_NAME}-${VERSION}.oxt"'
+    - 'curl --fail --silent --show-error --header "JOB-TOKEN: ${CI_JOB_TOKEN}" --upload-file "dist/${OXT}" "${PKG_URL}"'
+    - 'awk -v v="## [${VERSION}]" ''index($0,v)==1{f=1;next} /^## \[/{f=0} f'' CHANGELOG.md > release_notes.md'
+    - 'if [ ! -s release_notes.md ]; then echo "Release ${CI_COMMIT_TAG}. See CHANGELOG.md." > release_notes.md; fi'
+    - 'echo "PKG_URL=${PKG_URL}" > release.env'
+  artifacts:
+    paths:
+      - release_notes.md
+    reports:
+      dotenv: release.env
+
+release:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  needs:
+    - job: upload
+      artifacts: true
+  rules:
+    - if: '$CI_COMMIT_TAG'
+  script:
+    - |
+      release-cli create \
+        --name "Release ${CI_COMMIT_TAG}" \
+        --tag-name "${CI_COMMIT_TAG}" \
+        --description release_notes.md \
+        --assets-link "{\"name\":\"${PKG_NAME}-${CI_COMMIT_TAG}.oxt\",\"url\":\"${PKG_URL}\"}"
