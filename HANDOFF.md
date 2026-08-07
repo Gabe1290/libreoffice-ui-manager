@@ -39,6 +39,22 @@ python -m pytest -q          # (or: python -m unittest discover -s tests)
 python tools/build.py        # -> dist/louim.oxt
 ```
 
+## Releasing
+
+Fully automated by `.gitlab-ci.yml` (build -> release stages). To cut a release:
+
+1. Bump `<version>` in `extension/description.xml` and add a `## [X.Y.Z]` section
+   to `CHANGELOG.md` (with a matching `[X.Y.Z]: .../tags/vX.Y.Z` link at the
+   bottom).
+2. Commit, push, then tag and push the tag: `git tag -a vX.Y.Z -m "..." &&
+   git push origin vX.Y.Z`.
+
+The tag pipeline then builds the `.oxt`, uploads it to the generic Package
+Registry, extracts that version's CHANGELOG section as the notes, and creates
+the GitLab Release with the `.oxt` attached — no manual UI step. Proven
+end-to-end on v4.1.1 (2026-08-03). One release per tag: don't also create the
+release by hand (release-cli errors if it already exists).
+
 ## Install / where things live
 
 - Installer: `dist/louim.oxt` → **Tools ▸ Extension Manager ▸ Add…**.
