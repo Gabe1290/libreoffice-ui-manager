@@ -13,12 +13,14 @@ Its goal is to help students and adult beginners learn word processing progressi
 
 ## Install
 
-1. Download `louim.oxt` from the
-   [latest release](https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/releases).
-2. In LibreOffice: **Tools ▸ Extension Manager… ▸ Add…**, pick `louim.oxt`, and
+1. Download `louim-<version>.oxt` from the
+   [latest release](https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/releases)
+   (attached as a release asset).
+2. In LibreOffice: **Tools ▸ Extension Manager… ▸ Add…**, pick the `.oxt`, and
    restart LibreOffice.
-3. A **LibreOffice UI Manager** menu appears in Writer: *Apply Template…*,
-   *Save Current Layout as Template…*, *Restore Full Menus*.
+3. A **LibreOffice UI Manager** menu appears in each supported app (Writer,
+   Calc, Impress, Draw): *Apply Template…*, *Save Current Layout as Template…*,
+   *Restore Full Menus*.
 
 Or build it yourself with `python tools/build.py` (output in `dist/louim.oxt`).
 

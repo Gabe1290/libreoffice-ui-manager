@@ -3,6 +3,19 @@
 All notable changes to LibreOffice UI Manager (LOUIM) are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.1.1] — 2026-08-03
+
+### Fixed
+
+- README install note said the menu appears "in Writer"; it appears in every
+  supported app (Writer, Calc, Impress, Draw). Also point the download at the
+  versioned release asset (`louim-<version>.oxt`).
+
+### Infrastructure
+
+- CI now auto-publishes a GitLab Release with the built `.oxt` attached on every
+  version tag.
+
 ## [4.1.0] — 2026-08-03
 
 ### Changed
@@ -157,5 +170,6 @@ Writer**, driven entirely from the **LibreOffice UI Manager** menu.
 - Tested offline with `pytest` (64 tests) and verified live on isolated,
   throwaway LibreOffice instances — never against a user's working profile.
 
+[4.1.1]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v4.1.1
 [4.1.0]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v4.1.0
 [1.0.0]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v1.0.0
