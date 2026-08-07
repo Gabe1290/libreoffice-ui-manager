@@ -3,6 +3,25 @@
 All notable changes to LibreOffice UI Manager (LOUIM) are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.1.0] — 2026-08-03
+
+### Changed
+
+- **Apply Template…** now filters templates **by folder** rather than by file
+  name: starter templates are bundled in per-application subfolders
+  (`templates/<app>/`) and the picker opens in the active app's subfolder, so
+  Writer shows only Writer templates (go up one folder to see all). Uses the
+  native FilePicker, which avoids a Skia list-paint glitch on locked-down Linux
+  where filenames failed to render in the office picker.
+- **Save Current Layout…** now defaults to **`Documents/LOUIM templates`**
+  instead of the per-user extension cache (which is wiped on every
+  reinstall/update, silently losing teacher-made templates).
+
+### Infrastructure
+
+- Project moved from GitHub to **GitLab** (`gthullen-group/libreoffice-ui-manager`):
+  CI pipeline added, project URLs repointed, cross-machine `HANDOFF.md` added.
+
 ## [4.0.2] — 2026-06-20
 
 ### Changed
@@ -138,4 +157,5 @@ Writer**, driven entirely from the **LibreOffice UI Manager** menu.
 - Tested offline with `pytest` (64 tests) and verified live on isolated,
   throwaway LibreOffice instances — never against a user's working profile.
 
+[4.1.0]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v4.1.0
 [1.0.0]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v1.0.0
