@@ -14,9 +14,27 @@ installed. Day-to-day state lives in git history, `CHANGELOG.md`, and `docs/`.
 
 ## Hosting
 
-- **GitLab (origin):** `gitlab.com/gthullen-group/libreoffice-ui-manager` — migrated from GitHub.
-- GitHub kept as a secondary `github` remote (fallback; not the canonical home).
-- CI: `.gitlab-ci.yml` (compile → unittest → build `.oxt`). **Green.**
+- **GitLab (origin):** `gitlab.com/gthullen-group/libreoffice-ui-manager` — the
+  **source of truth**. Development, issues, and automated releases live here.
+- **GitHub (`github` remote):** `github.com/Gabe1290/libreoffice-ui-manager` —
+  a **plain public mirror**. No CI there; do not develop on it directly.
+- CI: `.gitlab-ci.yml` (compile → unittest → build `.oxt`; on tags, publish the
+  Release with the `.oxt` attached). **Green.**
+
+### Mirroring (do this every release)
+
+Push `main` **and** tags to **both** remotes:
+
+```sh
+git push origin main && git push github main
+git push origin vX.Y.Z && git push github vX.Y.Z
+```
+
+Only GitLab CI reacts to the tag (builds + publishes the Release); GitHub just
+stores the mirrored commits/tags. **Never commit directly on GitHub** — it
+caused a real divergence once: work pushed straight to the GitHub mirror never
+reached GitLab, so the two `4.1.0`s differed and had to be reconciled by merge
+in **v4.2.0** (2026-08). Keep them in lockstep to avoid a repeat.
 
 ## Recent work (2026-06)
 
