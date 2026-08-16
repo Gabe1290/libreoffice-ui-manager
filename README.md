@@ -8,15 +8,18 @@ LibreOffice interface.
 
 Its goal is to help students and adult beginners learn word processing progressively, without being overwhelmed by too many menus and options.
 
-**Version 4.2.0** — stable release for LibreOffice **Writer**, **Calc**,
+**Version 4.2.1** — stable release for LibreOffice **Writer**, **Calc**,
 **Impress**, and **Draw**. Available in English, French, German, and Italian.
 
 ## Install
 
-1. Download `louim-<version>.oxt` from the
+1. Download `louim.oxt` from the
    [latest release](https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/releases)
-   (attached as a release asset).
-2. In LibreOffice: **Tools ▸ Extension Manager… ▸ Add…**, pick the `.oxt`, and
+   (attached as a release asset). **Keep the filename `louim.oxt` — do not
+   rename it.** LibreOffice uses the `.oxt` filename as the extension's package
+   name, and the menu commands reference `louim.oxt`; a renamed file makes
+   *Apply Template* fail with `KeyError: 'louim.oxt'`.
+2. In LibreOffice: **Tools ▸ Extension Manager… ▸ Add…**, pick `louim.oxt`, and
    restart LibreOffice.
 3. A **LibreOffice UI Manager** menu appears in each supported app (Writer,
    Calc, Impress, Draw): *Apply Template…*, *Save Current Layout as Template…*,

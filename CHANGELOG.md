@@ -3,6 +3,16 @@
 All notable changes to LibreOffice UI Manager (LOUIM) are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.2.1] — 2026-08-16
+
+### Fixed
+
+- Release assets are now published with the **stable filename `louim.oxt`**
+  (previously `louim-<version>.oxt`). LibreOffice derives the extension's package
+  name from the `.oxt` filename, and the menu commands reference `louim.oxt`, so
+  installing a versioned-name file broke *Apply Template* / *Restore* with
+  `KeyError: 'louim.oxt'`. Install `louim.oxt` and do not rename it.
+
 ## [4.2.0] - 2026-08-03
 
 Reconciles the audit-fix work released on the GitHub mirror (tagged 4.1.0 there)
@@ -204,6 +214,7 @@ Writer**, driven entirely from the **LibreOffice UI Manager** menu.
 - Tested offline with `pytest` (64 tests) and verified live on isolated,
   throwaway LibreOffice instances — never against a user's working profile.
 
+[4.2.1]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v4.2.1
 [4.2.0]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v4.2.0
 [4.1.1]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v4.1.1
 [4.1.0]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v4.1.0
