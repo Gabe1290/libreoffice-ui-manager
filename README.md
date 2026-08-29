@@ -25,6 +25,13 @@ Its goal is to help students and adult beginners learn word processing progressi
    Calc, Impress, Draw): *Apply Template…*, *Save Current Layout as Template…*,
    *Restore Full Menus*.
 
+> **Stuck on a repeating "…already installed. Replace?" prompt at startup?**
+> Just click **Cancel** — the extension is already installed and works fine;
+> Cancel simply dismisses the repeat attempt. This can happen if you install by
+> **double-clicking** the `.oxt` (a second LibreOffice tries to register it while
+> the Quickstarter still holds the extension database, so the install keeps
+> retrying). Installing via **Extension Manager ▸ Add** avoids it entirely.
+
 Or build it yourself with `python tools/build.py` (output in `dist/louim.oxt`).
 
 ## Supported applications
