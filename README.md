@@ -8,7 +8,7 @@ LibreOffice interface.
 
 Its goal is to help students and adult beginners learn word processing progressively, without being overwhelmed by too many menus and options.
 
-**Version 4.2.1** — stable release for LibreOffice **Writer**, **Calc**,
+**Version 4.2.2** — stable release for LibreOffice **Writer**, **Calc**,
 **Impress**, and **Draw**. Available in English, French, German, and Italian.
 
 ## Install

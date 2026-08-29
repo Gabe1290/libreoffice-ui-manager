@@ -3,6 +3,17 @@
 All notable changes to LibreOffice UI Manager (LOUIM) are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.2.2] — 2026-08-16
+
+### Fixed
+
+- Applying a template that hides **addon menus** crashed with
+  `NameError: name 'uno' is not defined`. `addons.py`'s `state_path` calls
+  `uno.fileUrlToSystemPath` but lost its local `import uno` when the module moved
+  to lazy imports (in 4.2.0); the other adapters kept theirs. Added the missing
+  import, plus a static guard test (`test_uno_imports`) that fails offline if any
+  function uses `uno`/`unohelper` without an import in scope.
+
 ## [4.2.1] — 2026-08-16
 
 ### Fixed
@@ -214,6 +225,7 @@ Writer**, driven entirely from the **LibreOffice UI Manager** menu.
 - Tested offline with `pytest` (64 tests) and verified live on isolated,
   throwaway LibreOffice instances — never against a user's working profile.
 
+[4.2.2]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v4.2.2
 [4.2.1]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v4.2.1
 [4.2.0]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v4.2.0
 [4.1.1]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v4.1.1

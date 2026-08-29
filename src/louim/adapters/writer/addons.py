@@ -102,6 +102,7 @@ def _merge_context(current, original, module):
 
 def state_path(ctx, module=WRITER):
     """Absolute path of the LOUIM addon-state file for ``module``."""
+    import uno
     ps = ctx.getServiceManager().createInstanceWithContext(
         "com.sun.star.util.PathSubstitution", ctx
     )
