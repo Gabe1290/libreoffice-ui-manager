@@ -8,7 +8,7 @@ LibreOffice interface.
 
 Its goal is to help students and adult beginners learn word processing progressively, without being overwhelmed by too many menus and options.
 
-**Version 4.2.2** — stable release for LibreOffice **Writer**, **Calc**,
+**Version 4.3.0** — stable release for LibreOffice **Writer**, **Calc**,
 **Impress**, and **Draw**. Available in English, French, German, and Italian.
 
 ## Install
@@ -18,12 +18,18 @@ Its goal is to help students and adult beginners learn word processing progressi
    (attached as a release asset). **Keep the filename `louim.oxt` — do not
    rename it.** LibreOffice uses the `.oxt` filename as the extension's package
    name, and the menu commands reference `louim.oxt`; a renamed file makes
-   *Apply Template* fail with `KeyError: 'louim.oxt'`.
+   *Choose Template* fail with `KeyError: 'louim.oxt'`.
 2. In LibreOffice: **Tools ▸ Extension Manager… ▸ Add…**, pick `louim.oxt`, and
    restart LibreOffice.
 3. A **LibreOffice UI Manager** menu appears in each supported app (Writer,
-   Calc, Impress, Draw): *Apply Template…*, *Save Current Layout as Template…*,
-   *Restore Full Menus*.
+   Calc, Impress, Draw): *Configure Menus…*, *Choose Template…*,
+   *Save Current Layout as Template…*, *Restore Full Menus*.
+
+   *Configure Menus…* is the quickest way in: it lists the application's
+   top-level menus with a tickbox each, and unticking one removes that menu
+   from the menu bar entirely — something LibreOffice's own
+   **Tools ▸ Customize** cannot do (there you can empty a built-in menu, but
+   the empty menu stays put).
 
 > **Stuck on a repeating "…already installed. Replace?" prompt at startup?**
 > Just click **Cancel** — the extension is already installed and works fine;

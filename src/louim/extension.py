@@ -243,6 +243,66 @@ def _pick_save_path(ctx, t, module):
     return uno.fileUrlToSystemPath(files[0]) if files else None
 
 
+def _save_current_layout(ctx, t, module):
+    """Snapshot the live interface to a .louim the user picks. Returns the name.
+
+    Shared by "Save Current Layout as Template..." and the Configure Menus
+    dialog's save tickbox. Returns None if the user cancels the save dialog —
+    the caller has already applied its changes either way.
+    """
+    from louim.template.saver import build_current_template, save_template
+
+    path = _pick_save_path(ctx, t, module)
+    if not path:
+        return None
+    name = os.path.splitext(os.path.basename(path))[0]
+    save_template(path, build_current_template(ctx, name=name, module=module))
+    return os.path.basename(path)
+
+
+def configure_menus(*args):
+    """Tick/untick the active application's top-level menus and apply the result.
+
+    This is the in-app answer to something LibreOffice itself cannot do: Tools >
+    Customize hides individual menu *items*, but a built-in top-level menu has no
+    visibility checkbox there, so an emptied menu still sits on the menu bar.
+    Unticking a menu here removes it outright.
+
+    The dialog only offers whole menus; the finer per-item state is read from the
+    live menu bar and carried through unchanged, so configuring menus never
+    resurrects items a teacher removed by hand or with a template.
+    """
+    ctx = XSCRIPTCONTEXT.getComponentContext()
+    try:
+        _ensure_package_path(ctx)
+        t = _translator(ctx)
+        module = _current_module(ctx)
+        from louim.adapters.writer.menubar import (
+            apply_menu_profile, menu_visibility, merge_top_level_choices,
+            top_level_choices,
+        )
+        from louim.ui.menu_picker import show_menu_picker
+
+        app_name = module.key.capitalize()
+        result = show_menu_picker(ctx, top_level_choices(ctx, module), t, app_name)
+        if result is None:
+            return  # user cancelled
+        chosen, also_save = result
+
+        profile = merge_top_level_choices(menu_visibility(ctx, module), chosen)
+        hidden = apply_menu_profile(ctx, profile, module)
+
+        saved = _save_current_layout(ctx, t, module) if also_save else None
+        if saved:
+            _message_box(ctx, t("product"),
+                         t("configure_saved_body", len(hidden), app_name, saved))
+        else:
+            _message_box(ctx, t("product"),
+                         t("configure_body", len(hidden), app_name))
+    except Exception as exc:  # noqa: BLE001 — never let a macro crash silently
+        _error_box(ctx, exc)
+
+
 def apply_template(*args):
     """Pick a .louim template and apply its profile to the active application."""
     ctx = XSCRIPTCONTEXT.getComponentContext()
@@ -327,19 +387,14 @@ def export_template(*args):
         _ensure_package_path(ctx)
         t = _translator(ctx)
         module = _current_module(ctx)
-        from louim.template.saver import build_current_template, save_template
-
-        path = _pick_save_path(ctx, t, module)
-        if not path:
+        saved = _save_current_layout(ctx, t, module)
+        if not saved:
             return  # user cancelled
-
-        name = os.path.splitext(os.path.basename(path))[0]
-        template = build_current_template(ctx, name=name, module=module)
-        save_template(path, template)
-        _message_box(ctx, t("product"), t("export_body", os.path.basename(path)))
+        _message_box(ctx, t("product"), t("export_body", saved))
     except Exception as exc:  # noqa: BLE001
         _error_box(ctx, exc)
 
 
 # Expose the entry points to the LibreOffice script provider.
-g_exportedScripts = (apply_template, restore_menus, export_template)
+g_exportedScripts = (apply_template, configure_menus, restore_menus,
+                     export_template)

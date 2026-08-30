@@ -230,3 +230,25 @@ need, then **Save Current Layout as Template…** to capture that exact reduced
 interface. Only what differs from the default is written, so the file stays
 readable. The command-line equivalent is `tools/export-template.py` (run against
 a Writer started with a UNO socket).
+
+### Removing a whole menu
+
+**Tools ▸ Customize cannot remove a top-level menu** — only the items inside it.
+Built-in menus have no visibility tickbox there, and Delete is reserved for menus
+you created yourself, so you can empty the Table menu but the empty menu stays on
+the menu bar. An export of that state records `".uno:TableMenu": true` with its
+children listed `false`, which round-trips back to an empty-but-present menu.
+
+To remove the menu itself there are two routes:
+
+- **Configure Menus…** in the LOUIM menu — a tickbox per top-level menu; unticking
+  one removes it from the menu bar outright, and the dialog can save the result as
+  a template. Menu items you had hidden individually are carried through unchanged.
+- **Edit the file** — set the menu's own command to `false`:
+
+  ```json
+  "menus": { ".uno:TableMenu": false, ".uno:FormatFormMenu": false }
+  ```
+
+Hand-editing after an export is a small change: the export always writes every
+top-level menu explicitly, so the `true` you need to flip is already in the file.

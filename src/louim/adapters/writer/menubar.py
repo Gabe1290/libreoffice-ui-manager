@@ -284,3 +284,57 @@ def restore_default_menus(ctx, module=WRITER):
     ui_cfg.removeSettings(MENUBAR_RESOURCE)
     ui_cfg.store()
     return True
+
+
+def _top_level_choices(default, current_cmds, command_labels):
+    """Pair every factory top-level menu with whether it is currently shown."""
+    choices = []
+    for i in range(default.getCount()):
+        entry = _props_to_dict(default.getByIndex(i))
+        command = entry.get("CommandURL")
+        if not command:
+            # Separators and other non-command entries have no CommandURL.
+            continue
+        choices.append({
+            "command": command,
+            "label": _label_for(command, entry.get("Label", ""), command_labels),
+            "visible": command in current_cmds,
+        })
+    return choices
+
+
+def top_level_choices(ctx, module=WRITER):
+    """Every top-level menu the module *can* show, with its current state.
+
+    Returns a list of dicts in factory menu-bar order:
+        {"command": ".uno:TableMenu", "label": "Table", "visible": False}
+
+    The list comes from the factory default rather than the live menu bar, so a
+    menu LOUIM has already removed still appears — otherwise the dialog that
+    hid a menu could never be used to bring it back. ``label`` is localized for
+    display only and is never written to a template.
+    """
+    ui_cfg = _module_ui_config(ctx, module)
+    current = _collect_command_set(
+        ui_cfg.getSettings(MENUBAR_RESOURCE, False), set()
+    )
+    return _top_level_choices(
+        ui_cfg.getDefaultSettings(MENUBAR_RESOURCE),
+        current,
+        _command_labels(ctx, module),
+    )
+
+
+def merge_top_level_choices(current, choices):
+    """Overlay whole-menu show/hide choices onto a full menu snapshot.
+
+    ``current`` is a ``menu_visibility`` snapshot — every top-level menu, plus
+    every nested item already hidden. ``choices`` maps top-level menu commands
+    to booleans, as ticked in the Configure Menus dialog. Returns a new map with
+    the top-level entries replaced and every other entry kept, so choosing whole
+    menus never resurrects the individual items a teacher removed via
+    Tools ▸ Customize (or an earlier template).
+    """
+    merged = dict(current)
+    merged.update(choices)
+    return merged

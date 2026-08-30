@@ -100,20 +100,80 @@ _STRINGS = {
         "en": ('Saved the current layout as "%s".\n\n'
                "It is a plain-text .louim (JSON) file — open it in any text "
                "editor to fine-tune which menus and toolbars are shown, then "
-               "share it with other machines via Apply Template..."),
+               "share it with other machines via Choose Template..."),
         "fr": ("Disposition actuelle enregistrée sous « %s ».\n\n"
                "C'est un fichier .louim en texte clair (JSON) — ouvrez-le dans "
                "un éditeur de texte pour ajuster les menus et barres d'outils "
-               "affichés, puis partagez-le via Appliquer un modèle…"),
+               "affichés, puis partagez-le via Choisir un modèle…"),
         "de": ('Aktuelles Layout als „%s“ gespeichert.\n\n'
                "Dies ist eine Klartext-Datei .louim (JSON) — öffnen Sie sie in "
                "einem Texteditor, um anzupassen, welche Menüs und Symbolleisten "
                "angezeigt werden, und teilen Sie sie dann über „Vorlage "
-               "anwenden …“."),
+               "auswählen …“."),
         "it": ('Layout attuale salvato come "%s".\n\n'
                "È un file .louim in testo semplice (JSON) — aprilo in un editor "
                "di testo per regolare quali menu e barre degli strumenti "
-               "mostrare, poi condividilo tramite Applica modello…"),
+               "mostrare, poi condividilo tramite Scegli modello…"),
+    },
+    "configure_title": {
+        "en": "LOUIM — Configure Menus",
+        "fr": "LOUIM — Configurer les menus",
+        "de": "LOUIM – Menüs konfigurieren",
+        "it": "LOUIM — Configura menu",
+    },
+    "configure_hint": {
+        "en": ("Untick a menu to remove it from the %s menu bar completely. "
+               "Menu items you hid individually are kept."),
+        "fr": ("Décochez un menu pour le supprimer entièrement de la barre de "
+               "menus de %s. Les éléments masqués individuellement sont "
+               "conservés."),
+        "de": ("Entfernen Sie das Häkchen, um ein Menü vollständig aus der "
+               "Menüleiste von %s zu entfernen. Einzeln ausgeblendete "
+               "Menüeinträge bleiben erhalten."),
+        "it": ("Deseleziona un menu per rimuoverlo completamente dalla barra "
+               "dei menu di %s. Le voci nascoste singolarmente vengono "
+               "mantenute."),
+    },
+    "configure_save_label": {
+        "en": "Also save these choices as a template file...",
+        "fr": "Enregistrer aussi ces choix comme modèle...",
+        "de": "Diese Auswahl auch als Vorlage speichern...",
+        "it": "Salva anche queste scelte come modello...",
+    },
+    "configure_apply": {
+        "en": "Apply",
+        "fr": "Appliquer",
+        "de": "Anwenden",
+        "it": "Applica",
+    },
+    "configure_cancel": {
+        "en": "Cancel",
+        "fr": "Annuler",
+        "de": "Abbrechen",
+        "it": "Annulla",
+    },
+    "configure_body": {
+        "en": ("Hidden %d menu(s) in %s.\n"
+               "Reopen the document if the interface has not refreshed."),
+        "fr": ("%d menu(s) masqué(s) dans %s.\n"
+               "Rouvrez le document si l'interface ne s'est pas actualisée."),
+        "de": ("%d Menü(s) in %s ausgeblendet.\n"
+               "Öffnen Sie das Dokument erneut, falls die Oberfläche nicht "
+               "aktualisiert wurde."),
+        "it": ("Nascosti %d menu in %s.\n"
+               "Riapri il documento se l'interfaccia non si è aggiornata."),
+    },
+    "configure_saved_body": {
+        "en": ('Hidden %d menu(s) in %s, and saved the result as "%s".\n'
+               "Reopen the document if the interface has not refreshed."),
+        "fr": ("%d menu(s) masqué(s) dans %s, résultat enregistré sous "
+               "« %s ».\nRouvrez le document si l'interface ne s'est pas "
+               "actualisée."),
+        "de": ('%d Menü(s) in %s ausgeblendet und das Ergebnis als „%s“ '
+               "gespeichert.\nÖffnen Sie das Dokument erneut, falls die "
+               "Oberfläche nicht aktualisiert wurde."),
+        "it": ('Nascosti %d menu in %s e risultato salvato come "%s".\n'
+               "Riapri il documento se l'interfaccia non si è aggiornata."),
     },
 }
 

@@ -3,6 +3,35 @@
 All notable changes to LibreOffice UI Manager (LOUIM) are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.3.0] — 2026-08-30
+
+### Added
+
+- **Configure Menus...** — a new dialog in the LOUIM menu that lists the active
+  application's top-level menus with a tickbox each. Unticking one removes that
+  menu from the menu bar **entirely**, which LibreOffice's own
+  **Tools > Customize** cannot do: built-in menus have no visibility tickbox
+  there and Delete is reserved for menus you created yourself, so you can empty
+  the Table menu but the empty menu stays put. Optionally saves the result as a
+  template in the same step.
+- The dialog reads its menu list from the **factory default** rather than the
+  live menu bar, so a menu LOUIM already removed still appears and can be
+  brought back — and it carries the finer per-item state through unchanged, so
+  configuring whole menus never resurrects items hidden via Tools > Customize.
+
+### Changed
+
+- Menu entry **Apply Template...** renamed to **Choose Template...** (all four
+  UI languages), including the message text that names it.
+
+### Notes
+
+- New strings localized in English, French, German, and Italian. Checkbox labels
+  come from LibreOffice's own command descriptions, so they always match the
+  user's menu bar.
+- 107 offline tests; the dialog's data layer (`top_level_choices`,
+  `merge_top_level_choices`) is covered in `tests/test_menu_choices.py`.
+
 ## [4.2.2] — 2026-08-16
 
 ### Fixed
@@ -225,6 +254,7 @@ Writer**, driven entirely from the **LibreOffice UI Manager** menu.
 - Tested offline with `pytest` (64 tests) and verified live on isolated,
   throwaway LibreOffice instances — never against a user's working profile.
 
+[4.3.0]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v4.3.0
 [4.2.2]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v4.2.2
 [4.2.1]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v4.2.1
 [4.2.0]: https://gitlab.com/gthullen-group/libreoffice-ui-manager/-/tags/v4.2.0

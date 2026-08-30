@@ -39,12 +39,26 @@
                                 <value>com.sun.star.text.TextDocument,com.sun.star.text.GlobalDocument,com.sun.star.sheet.SpreadsheetDocument,com.sun.star.presentation.PresentationDocument,com.sun.star.drawing.DrawingDocument</value>
                             </prop>
                             <node oor:name="Submenu">
+                                <node oor:name="m3" oor:op="replace">
+                                    <prop oor:name="Title" oor:type="xs:string">
+                                        <value xml:lang="en-US">Configure Menus...</value>
+                                        <value xml:lang="fr">Configurer les menus...</value>
+                                        <value xml:lang="de">Menüs konfigurieren...</value>
+                                        <value xml:lang="it">Configura menu...</value>
+                                    </prop>
+                                    <prop oor:name="URL" oor:type="xs:string">
+                                        <value>vnd.sun.star.script:louim.oxt/python/louim/extension.py$configure_menus?language=Python&amp;location=user:uno_packages</value>
+                                    </prop>
+                                    <prop oor:name="Target" oor:type="xs:string">
+                                        <value>_self</value>
+                                    </prop>
+                                </node>
                                 <node oor:name="m1" oor:op="replace">
                                     <prop oor:name="Title" oor:type="xs:string">
-                                        <value xml:lang="en-US">Apply Template...</value>
-                                        <value xml:lang="fr">Appliquer un modèle...</value>
-                                        <value xml:lang="de">Vorlage anwenden...</value>
-                                        <value xml:lang="it">Applica modello...</value>
+                                        <value xml:lang="en-US">Choose Template...</value>
+                                        <value xml:lang="fr">Choisir un modèle...</value>
+                                        <value xml:lang="de">Vorlage auswählen...</value>
+                                        <value xml:lang="it">Scegli modello...</value>
                                     </prop>
                                     <prop oor:name="URL" oor:type="xs:string">
                                         <value>vnd.sun.star.script:louim.oxt/python/louim/extension.py$apply_template?language=Python&amp;location=user:uno_packages</value>
