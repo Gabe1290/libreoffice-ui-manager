@@ -81,6 +81,13 @@ Hiding a menu also removes everything inside it. The menu bar is rebuilt from
 LibreOffice's factory default on every Apply, so the result never depends on
 what was applied before.
 
+**Three menus are never removed:** File (`.uno:PickList`), Edit
+(`.uno:EditMenu`) and Help (`.uno:HelpMenu`). They are a universal convention, so
+hiding them makes an application strange rather than simple — and keeping Help
+guarantees a way back, because LOUIM's own menu is merged into the menu bar
+anchored after it. Marking any of them `false` in a template is ignored, not
+obeyed.
+
 To find the UNO ID of an individual item, run `tools/discover-menus.py --tree`
 against a running Writer — it prints the full menu tree, indented, with every
 command ID.

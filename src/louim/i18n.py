@@ -123,16 +123,18 @@ _STRINGS = {
     },
     "configure_hint": {
         "en": ("Untick a menu to remove it from the %s menu bar completely. "
-               "Menu items you hid individually are kept."),
+               "File, Edit and Help are always kept. Menu items you hid "
+               "individually are kept too."),
         "fr": ("Décochez un menu pour le supprimer entièrement de la barre de "
-               "menus de %s. Les éléments masqués individuellement sont "
-               "conservés."),
+               "menus de %s. Fichier, Édition et Aide sont toujours "
+               "conservés, ainsi que les éléments masqués individuellement."),
         "de": ("Entfernen Sie das Häkchen, um ein Menü vollständig aus der "
-               "Menüleiste von %s zu entfernen. Einzeln ausgeblendete "
-               "Menüeinträge bleiben erhalten."),
+               "Menüleiste von %s zu entfernen. Datei, Bearbeiten und Hilfe "
+               "bleiben immer erhalten, ebenso einzeln ausgeblendete "
+               "Menüeinträge."),
         "it": ("Deseleziona un menu per rimuoverlo completamente dalla barra "
-               "dei menu di %s. Le voci nascoste singolarmente vengono "
-               "mantenute."),
+               "dei menu di %s. File, Modifica e Aiuto sono sempre mantenuti, "
+               "come le voci nascoste singolarmente."),
     },
     "configure_save_label": {
         "en": "Also save these choices as a template file...",

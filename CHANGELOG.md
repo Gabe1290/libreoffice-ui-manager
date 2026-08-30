@@ -19,6 +19,17 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   brought back — and it carries the finer per-item state through unchanged, so
   configuring whole menus never resurrects items hidden via Tools > Customize.
 
+- **File, Edit and Help can no longer be hidden.** They are a universal
+  convention across desktop applications, so there is no legitimate teaching
+  reason to remove them — and keeping Help closes a lockout: LOUIM's own menu is
+  merged into the menu bar it manages (anchored after Help), so a profile that
+  hid *every* top-level menu took the LOUIM menu down with it, leaving no way
+  back to Restore Full Menus short of `soffice --safe-mode` or deleting the
+  profile's menubar config. The rule lives in `menubar.PROTECTED_MENUS` and is
+  enforced in `apply_menu_profile`, so a hand-written template marking one of
+  them `false` is overridden rather than obeyed. The dialog shows the three
+  ticked and greyed out.
+
 ### Changed
 
 - Menu entry **Apply Template...** renamed to **Choose Template...** (all four

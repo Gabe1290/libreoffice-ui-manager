@@ -23,7 +23,9 @@ _BUTTON_CANCEL = 2
 # Layout, in AppFont map units (the dialog model's native unit).
 _MARGIN = 8
 _WIDTH = 200
-_HINT_HEIGHT = 18
+# Tall enough for four wrapped lines: the hint runs noticeably longer in
+# French and German than in English, and a fixed two-line box clipped it.
+_HINT_HEIGHT = 40
 _ROW_HEIGHT = 11
 _GAP = 7
 _BUTTON_WIDTH = 52
@@ -72,10 +74,14 @@ def show_menu_picker(ctx, choices, t, app_name):
     names = []
     for index, choice in enumerate(choices):
         name = "menu%d" % index
+        # Protected menus (File, Edit, Help) are shown ticked but disabled, so
+        # the rule is visible in the UI rather than a silent override on apply.
+        protected = choice.get("protected", False)
         _add(model, name, "CheckBox", PositionX=_MARGIN + 2, PositionY=y,
              Width=inner - 2, Height=_ROW_HEIGHT,
              Label=choice["label"] or choice["command"],
-             State=1 if choice["visible"] else 0)
+             State=1 if (choice["visible"] or protected) else 0,
+             Enabled=not protected)
         names.append((name, choice["command"]))
         y += _ROW_HEIGHT
     y += _GAP

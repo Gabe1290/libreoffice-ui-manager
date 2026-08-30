@@ -18,6 +18,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from louim.adapters.writer.menubar import (  # noqa: E402
     _prune_hidden, _top_level_choices, merge_top_level_choices,
+    PROTECTED_MENUS,
 )
 
 
@@ -147,3 +148,43 @@ class DialogToMenuBarTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ProtectedMenusTest(unittest.TestCase):
+    """File, Edit and Help are never removable.
+
+    They are a universal desktop convention, and keeping Help in particular
+    guarantees LOUIM stays reachable: its own menu is merged into the menu bar
+    anchored after Help, so an all-menus-hidden profile used to hide the only
+    route to "Restore Full Menus".
+    """
+
+    def test_protected_set_is_file_edit_help(self):
+        self.assertEqual(set(PROTECTED_MENUS),
+                         {".uno:PickList", ".uno:EditMenu", ".uno:HelpMenu"})
+
+    def test_marked_protected_in_the_choice_list(self):
+        default = FakeContainer([menu(".uno:PickList"), menu(".uno:TableMenu"),
+                                 menu(".uno:HelpMenu")])
+        choices = _top_level_choices(default, {".uno:PickList", ".uno:TableMenu",
+                                               ".uno:HelpMenu"}, None)
+        flags = {c["command"]: c["protected"] for c in choices}
+        self.assertTrue(flags[".uno:PickList"])
+        self.assertTrue(flags[".uno:HelpMenu"])
+        self.assertFalse(flags[".uno:TableMenu"])
+
+    def test_pruning_a_profile_that_hides_everything_keeps_them(self):
+        # The lockout case: every menu unticked. File/Edit/Help must survive, so
+        # the LOUIM menu anchored after Help survives with them.
+        bar = FakeContainer([menu(".uno:PickList"), menu(".uno:EditMenu"),
+                             menu(".uno:TableMenu"), menu(".uno:HelpMenu")])
+        profile = {c: False for c in (".uno:PickList", ".uno:EditMenu",
+                                      ".uno:TableMenu", ".uno:HelpMenu")}
+        # apply_menu_profile forces the protected menus visible before pruning.
+        for command in PROTECTED_MENUS:
+            profile[command] = True
+        hidden = []
+        _prune_hidden(bar, profile, hidden)
+        self.assertEqual(bar.commands(),
+                         [".uno:PickList", ".uno:EditMenu", ".uno:HelpMenu"])
+        self.assertEqual(hidden, [".uno:TableMenu"])

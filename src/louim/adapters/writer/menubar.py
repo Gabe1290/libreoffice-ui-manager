@@ -14,6 +14,24 @@ from louim.adapters.modules import WRITER
 
 MENUBAR_RESOURCE = "private:resource/menubar/menubar"
 
+# Menus LOUIM will never remove, at any depth of configuration.
+#
+# File, Edit and Help are a universal convention across desktop applications —
+# a learner meeting an application without them is worse off, not simpler — so
+# there is no legitimate teaching reason to hide them. Keeping Help also makes
+# lockout impossible: LOUIM's own menu is merged into the menu bar it manages
+# (Addons.xcu anchors it AddAfter .uno:HelpMenu), so a profile that removed
+# every menu used to take the LOUIM menu with it, leaving no way back to
+# "Restore Full Menus" short of ``soffice --safe-mode``.
+#
+# Enforced in ``apply_menu_profile``, so a hand-written template marking one of
+# these ``false`` is overridden rather than obeyed.
+PROTECTED_MENUS = (
+    ".uno:PickList",    # File
+    ".uno:EditMenu",    # Edit
+    ".uno:HelpMenu",    # Help
+)
+
 
 def _module_ui_config(ctx, module=WRITER):
     """Return the module-level UI configuration manager for ``module``."""
@@ -242,11 +260,21 @@ def apply_menu_profile(ctx, menus, module=WRITER):
     inside a menu or submenu (``.uno:InsertPagebreak``). Commands not mentioned
     default to visible. Hiding a menu also removes everything inside it.
 
+    ``PROTECTED_MENUS`` (File, Edit, Help) are always kept, whatever the profile
+    says — they are a universal convention, and keeping Help guarantees LOUIM's
+    own menu (anchored after it) can never be configured out of reach.
+
     The menu bar is always rebuilt from LibreOffice's factory default, so
     applying is non-cumulative: applying level-1 then level-2 yields exactly
     level-2. Returns the list of command IDs that were hidden. The change
     persists in the user's profile until ``restore_default_menus``.
     """
+    # Protected menus win over whatever the caller asked for: marking them
+    # visible here is enough, since _prune_hidden only removes explicit False.
+    menus = dict(menus)
+    for command in PROTECTED_MENUS:
+        menus[command] = True
+
     ui_cfg = _module_ui_config(ctx, module)
 
     # Non-cumulative: drop any prior customization so we start from the factory
@@ -299,6 +327,7 @@ def _top_level_choices(default, current_cmds, command_labels):
             "command": command,
             "label": _label_for(command, entry.get("Label", ""), command_labels),
             "visible": command in current_cmds,
+            "protected": command in PROTECTED_MENUS,
         })
     return choices
 
