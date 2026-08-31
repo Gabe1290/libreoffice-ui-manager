@@ -4,7 +4,7 @@
 **Practice for every machine on this project:** at the end of a session, update
 this file, then `git commit` + `git push`; on start, `git pull` and read it first.
 
-_Last updated: 2026-06-24._
+_Last updated: 2026-08-31._
 
 ## Status: **mature / stable.**
 
@@ -35,6 +35,17 @@ stores the mirrored commits/tags. **Never commit directly on GitHub** — it
 caused a real divergence once: work pushed straight to the GitHub mirror never
 reached GitLab, so the two `4.1.0`s differed and had to be reconciled by merge
 in **v4.2.0** (2026-08). Keep them in lockstep to avoid a repeat.
+
+## In progress
+
+- **Documentation fill plan** (started 2026-08-31): 14 doc files under `docs/`
+  are empty stubs (ADRs, developer-guide, coding-standards, discovery-engine,
+  ui-element-model, workspace, glossary, teacher-guide, 5 education essays),
+  plus 3 already-written docs are stale vs. the actual v4.0.0 status. Full
+  tiered plan with decisions already made (notably: document the as-built
+  `Module` pattern, not the never-implemented Workspace/UIElement object
+  model) is in `docs/documentation-fill-plan.md`. Nothing drafted yet — start
+  with Tier 1.
 
 ## Recent work (2026-06)
 
