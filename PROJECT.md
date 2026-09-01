@@ -10,17 +10,31 @@ LOUIM is a learning tool, not primarily a lockdown tool.
 
 ## Current Milestone
 
-**Version 4.0.0 — Draw (2026-06-20). Roadmap complete.**
+**Version 4.3.0 — Configure Menus dialog + the File/Edit/Help lockout fix
+(2026-08-30). Status: mature / stable.** [HANDOFF.md](HANDOFF.md) is the
+authoritative day-to-day status doc; update that one too when this section
+changes.
 
-LOUIM drives **all four core LibreOffice apps — Writer, Calc, Impress, Draw —**
-from one module-parameterized engine (`src/louim/adapters/modules.py`): a
-`Module` descriptor carries the per-app identifiers (document service,
+LOUIM drives all four core LibreOffice apps, Writer, Calc, Impress, and
+Draw, from one module-parameterized engine (`src/louim/adapters/modules.py`).
+A `Module` descriptor carries the per-app identifiers: document service,
 window-state node, sidebar app names, addon contexts, and shared sidebar
-context-group substitutions). Every adapter takes a `module` (default Writer);
-the extension routes apply/restore/export by the active document. Impress and
-Draw are complementary halves of the `DrawImpress` sidebar group. Starter
-templates ship for all four apps. Verified on throwaway Writer/Calc/Impress/Draw
-instances; 77 unit tests pass. Releases v1.0.0–v4.0.0 are tagged and published.
+context-group substitutions. Every adapter takes a `module` (default Writer),
+and the extension routes apply/restore/export by the active document.
+Impress and Draw are complementary halves of the `DrawImpress` sidebar group.
+Starter templates ship for all four apps. A "Configure Menus..." dialog lets
+a teacher remove a whole built-in top-level menu in-app, something Tools ▸
+Customize cannot do. Three menus, File, Edit, and Help, can never be removed,
+closing a lockout where hiding every menu used to take LOUIM's own menu down
+with it.
+
+Development moved from GitHub to GitLab in v4.1.x
+(`gitlab.com/gthullen-group/libreoffice-ui-manager` is now the source of
+truth), with GitHub kept as a plain mirror. Releases v1.0.0 through v4.3.0
+are tagged and published, and 110 offline unit tests pass. See
+[docs/architecture.md](docs/architecture.md) for the current technical
+design, rewritten 2026-09-01 to match what's actually shipped rather than the
+earlier plan for a Model/Engine/UI layering.
 
 ## Resolved
 
@@ -59,17 +73,100 @@ outside the package.
 
 ## Next Session Tasks
 
-1. End-to-end GUI smoke test in a real Writer window (all surfaces verified via
-   the engine/headless, but not yet eyeballed together): install `dist/louim.oxt`,
-   Apply "Getting Started", confirm Drawing toolbar shows / Find+Insert gone;
-   add a `sidebar` entry hiding `GalleryDeck` and confirm it leaves the sidebar;
-   "Save Current Layout as Template..." round-trips; Restore returns everything.
-2. Verify the fr/de/it UI in a non-English LibreOffice (string + format parity
-   already unit-tested; this is the on-screen confirmation).
-3. Decide whether the in-app export should also capture **nested menu items**
-   (currently top-level menus only; full-tree capture would be large/verbose).
+Refreshed 2026-09-01. Items 1 and 2 below were partially addressed by
+v4.3.0's live verification. Item 3 was actually resolved back in the "Export
+captures menu items + toolbar buttons" work, but this list never got updated
+to say so until now.
+
+1. Full end-to-end GUI smoke test in a real Writer window, all in one pass:
+   install `dist/louim.oxt`, apply "Getting Started," confirm the Drawing
+   toolbar shows and Find/Insert are gone, add a `sidebar` entry hiding
+   `GalleryDeck` and confirm it leaves the sidebar, check that "Save Current
+   Layout as Template..." round-trips, and confirm Restore returns
+   everything. v4.3.0 verified the Configure Menus dialog live on throwaway
+   English and French profiles, but not this full checklist together.
+2. Verify the German and Italian UI on-screen in a non-English LibreOffice.
+   English and French were checked live for the Configure Menus dialog in
+   v4.3.0; string and format parity across all four languages is
+   unit-tested, but German and Italian haven't been eyeballed on screen.
+3. Done: deciding whether the in-app export should also capture nested menu
+   items. `menu_visibility` in menubar.py captures every hidden nested item,
+   not just top-level menus, as of the "Export captures menu items + toolbar
+   buttons" work below.
 4. Add a localized `description.xml` / `description.txt` for the Extension
-   Manager (currently English only) if desired.
+   Manager. Still English only.
+
+## Done — File/Edit/Help lockout fix (post-4.3.0, 2026-08-30)
+
+Unticking every menu in the new Configure Menus dialog, or a hand-written
+template marking every menu `false`, wrote an empty menu bar. LOUIM's own
+menu is merged into that bar, anchored after Help, so it went too: no
+Restore Full Menus, no Choose Template, no way back short of
+`soffice --safe-mode` or deleting the profile's menubar config. Reproduced on
+a throwaway profile.
+
+Fix: `menubar.PROTECTED_MENUS` (File `.uno:PickList`, Edit `.uno:EditMenu`,
+Help `.uno:HelpMenu`) gets forced visible at the top of `apply_menu_profile`,
+so a template marking one `false` is overridden rather than obeyed. The
+dialog shows the three ticked and disabled so the constraint is visible
+rather than a silent override. Hint text updated in all four languages. 110
+offline tests pass, including a new test where a profile marking all four
+menus false prunes to exactly File/Edit/Help.
+
+## Done — Release v4.3.0: Configure Menus dialog
+
+Tools ▸ Customize can remove individual menu items but not a whole built-in
+top-level menu. There's no visibility tickbox for one, and Delete is
+reserved for menus you created yourself. LOUIM's engine already supported
+deleting a menu entry outright; this adds the in-app way to ask for it.
+
+A new "Configure Menus..." dialog (`src/louim/ui/menu_picker.py`) shows a
+tickbox per top-level menu, built at runtime from `UnoControlDialogModel`,
+with labels resolved via `UICommandDescription` so they match the user's own
+language. `menubar.top_level_choices()` reads the list from the factory
+default rather than the live menu bar, so an already-hidden menu still
+appears and can be brought back; `merge_top_level_choices()` overlays ticks
+onto a live `menu_visibility` snapshot without resurrecting items hidden
+individually. "Apply Template..." was renamed to "Choose Template..." in all
+four languages.
+
+Verified live on throwaway profiles, English and French, never against a
+working LibreOffice. 107 offline tests pass.
+
+## Done — Releases v4.1.0 through v4.2.2: infra + audit fixes
+
+v4.1.0 shipped a set of audit-driven fixes: the "wrong application" dialog
+now names the template's app instead of the app you're already in, the
+restore confirmation names the active application in all four languages
+instead of always saying Writer, and addon/sidebar state files now record
+both the pre-hide value and what LOUIM wrote, so restoring in one
+application composes with a hide still applied in another instead of
+clobbering it (legacy state files are still understood). "Save Current
+Layout" also stopped exporting contextual toolbars as visible.
+
+Around the same time, development moved to GitLab
+(`gitlab.com/gthullen-group/libreoffice-ui-manager`) as the source of truth,
+with an automated tag-driven CI release pipeline. GitHub is kept only as a
+plain mirror; never develop there directly (see [HANDOFF.md](HANDOFF.md)).
+That move caused a real divergence in v4.2.0: work landed straight on the
+GitHub mirror while GitLab was becoming the source of truth, producing two
+different `4.1.0`s. This got reconciled by merging GitHub's `4.1.0`, the
+audit fixes above plus `tools/verify-restore.py`, into GitLab's history.
+
+v4.2.1 fixed a release problem: CI had been publishing the release asset
+under a versioned filename (`louim-<version>.oxt`), but `Addons.xcu`
+hard-codes `louim.oxt` in every script URL, so installing the versioned
+asset broke every menu command with `KeyError: 'louim.oxt'`. CI now always
+publishes the stable `louim.oxt` filename, with the version living only in
+the registry path.
+
+v4.2.2 fixed a code bug: `addons.py`'s `state_path` used
+`uno.fileUrlToSystemPath` but had lost its local `import uno` when the
+module moved to lazy imports in 4.2.0, so applying any addon-hiding template
+crashed with `NameError`. Fixed, and paired with a new static guard test
+(`tests/test_uno_imports.py`) that fails offline if any function uses `uno`
+or `unohelper` without an import reachable in its scope, so this exact class
+of bug can't reach CI silently again.
 
 ## Done (verified on isolated instance) — Export captures Customize-hidden buttons
 

@@ -4,7 +4,7 @@
 **Practice for every machine on this project:** at the end of a session, update
 this file, then `git commit` + `git push`; on start, `git pull` and read it first.
 
-_Last updated: 2026-06-24._
+_Last updated: 2026-08-30._
 
 ## Status: **mature / stable.**
 

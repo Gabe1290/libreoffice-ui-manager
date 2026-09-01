@@ -1,5 +1,16 @@
 # Development Log
 
+**Status note (2026-09-01):** this log stopped after its first session, back
+when the extension's Python entry point didn't yet execute (milestone 0.3).
+Everything below is historical, kept for the record of where the project
+started rather than as a live document. LOUIM has since shipped v1.0.0
+through v4.3.0, with Writer, Calc, Impress, and Draw support, and is
+mature/stable per [HANDOFF.md](../HANDOFF.md). For current status, use
+[HANDOFF.md](../HANDOFF.md) for running status updated every session,
+[CHANGELOG.md](../CHANGELOG.md) for the per-release history this log never
+grew into, and [PROJECT.md](../PROJECT.md) for the current milestone and
+open tasks.
+
 ## Session 1
 
 ### Project Vision
