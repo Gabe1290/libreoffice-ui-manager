@@ -31,19 +31,19 @@ LOUIM allows users to:
 
 ---
 
-# First Supported Application
+# Supported Applications
 
-Version 1 supports only:
+Version 1 supported only LibreOffice Writer. As of version 4.0.0, LOUIM
+supports all four core LibreOffice applications:
 
-- LibreOffice Writer
-
-Future versions will support:
-
+- Writer
 - Calc
 - Impress
 - Draw
 
-without changing the architecture.
+Support for Calc, Impress, and Draw was added without changing the
+architecture, as planned: each is a `Module` descriptor plus starter
+templates, not a redesign. See [architecture.md](architecture.md).
 
 ---
 

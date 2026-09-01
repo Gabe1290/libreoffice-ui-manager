@@ -4,7 +4,7 @@
 **Practice for every machine on this project:** at the end of a session, update
 this file, then `git commit` + `git push`; on start, `git pull` and read it first.
 
-_Last updated: 2026-08-30._
+_Last updated: 2026-09-01._
 
 ## Status: **mature / stable.**
 
@@ -35,6 +35,19 @@ stores the mirrored commits/tags. **Never commit directly on GitHub** — it
 caused a real divergence once: work pushed straight to the GitHub mirror never
 reached GitLab, so the two `4.1.0`s differed and had to be reconciled by merge
 in **v4.2.0** (2026-08). Keep them in lockstep to avoid a repeat.
+
+## Recent work (2026-09)
+
+- **Documentation fill plan, done.** All 16 empty `docs/` stubs are written
+  (the plan in `docs/documentation-fill-plan.md`, started 2026-08-31 on
+  another machine, listed all 16 in its Tier 1-3 detail, though its own
+  summary line above undercounted them as 14). Followed the same call that
+  plan made: document the as-built `Module` pattern, not the
+  never-implemented Workspace/UIElement object model (see
+  `docs/adr/0004-workspace-concept.md`). The stale status docs (`PROJECT.md`,
+  `docs/roadmap.md`, `docs/development-log.md`, this file) are brought
+  current to v4.3.0 too. `docs/documentation-fill-plan.md` is left in place
+  as a record, with its checkboxes marked done.
 
 ## Recent work (2026-06)
 
