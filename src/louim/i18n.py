@@ -136,6 +136,15 @@ _STRINGS = {
                "dei menu di %s. File, Modifica e Aiuto sono sempre mantenuti, "
                "come le voci nascoste singolarmente."),
     },
+    "configure_addons_heading": {
+        "en": "Extension menus (take effect when you next open a document):",
+        "fr": ("Menus d'extension (effectifs à la prochaine ouverture d'un "
+               "document) :"),
+        "de": ("Erweiterungsmenüs (wirksam beim nächsten Öffnen eines "
+               "Dokuments):"),
+        "it": ("Menu delle estensioni (attivi alla prossima apertura di un "
+               "documento):"),
+    },
     "configure_save_label": {
         "en": "Also save these choices as a template file...",
         "fr": "Enregistrer aussi ces choix comme modèle...",
@@ -155,26 +164,28 @@ _STRINGS = {
         "it": "Annulla",
     },
     "configure_body": {
-        "en": ("Hidden %d menu(s) in %s.\n"
+        "en": ("Hidden %d menu(s) and %d extension menu(s) in %s.\n"
                "Reopen the document if the interface has not refreshed."),
-        "fr": ("%d menu(s) masqué(s) dans %s.\n"
+        "fr": ("%d menu(s) et %d menu(s) d'extension masqué(s) dans %s.\n"
                "Rouvrez le document si l'interface ne s'est pas actualisée."),
-        "de": ("%d Menü(s) in %s ausgeblendet.\n"
+        "de": ("%d Menü(s) und %d Erweiterungsmenü(s) in %s ausgeblendet.\n"
                "Öffnen Sie das Dokument erneut, falls die Oberfläche nicht "
                "aktualisiert wurde."),
-        "it": ("Nascosti %d menu in %s.\n"
+        "it": ("Nascosti %d menu e %d menu di estensione in %s.\n"
                "Riapri il documento se l'interfaccia non si è aggiornata."),
     },
     "configure_saved_body": {
-        "en": ('Hidden %d menu(s) in %s, and saved the result as "%s".\n'
+        "en": ('Hidden %d menu(s) and %d extension menu(s) in %s, and saved the '
+               'result as "%s".\n'
                "Reopen the document if the interface has not refreshed."),
-        "fr": ("%d menu(s) masqué(s) dans %s, résultat enregistré sous "
-               "« %s ».\nRouvrez le document si l'interface ne s'est pas "
-               "actualisée."),
-        "de": ('%d Menü(s) in %s ausgeblendet und das Ergebnis als „%s“ '
-               "gespeichert.\nÖffnen Sie das Dokument erneut, falls die "
-               "Oberfläche nicht aktualisiert wurde."),
-        "it": ('Nascosti %d menu in %s e risultato salvato come "%s".\n'
+        "fr": ("%d menu(s) et %d menu(s) d'extension masqué(s) dans %s, "
+               "résultat enregistré sous « %s ».\nRouvrez le document si "
+               "l'interface ne s'est pas actualisée."),
+        "de": ('%d Menü(s) und %d Erweiterungsmenü(s) in %s ausgeblendet und '
+               "das Ergebnis als „%s“ gespeichert.\nÖffnen Sie das Dokument "
+               "erneut, falls die Oberfläche nicht aktualisiert wurde."),
+        "it": ('Nascosti %d menu e %d menu di estensione in %s e risultato '
+               'salvato come "%s".\n'
                "Riapri il documento se l'interfaccia non si è aggiornata."),
     },
 }

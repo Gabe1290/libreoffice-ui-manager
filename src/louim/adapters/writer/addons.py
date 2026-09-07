@@ -158,6 +158,45 @@ def discover_addon_menus(ctx, module=WRITER):
     return menus
 
 
+def all_addon_menus(ctx, module=WRITER):
+    """Every extension-contributed top-level menu, shown *or* hidden in ``module``.
+
+    Like ``discover_addon_menus`` but without the visibility filter, so a menu a
+    previous template (or an earlier Configure Menus run) already hid still
+    appears and can be re-ticked -- the same reason ``menubar.top_level_choices``
+    reads from the factory default rather than the live menu bar. LOUIM's own
+    menu is excluded. Returns a list of dicts in config order:
+
+        {"node": "org.dicollecte.grammalecte", "title": "Grammalecte",
+         "visible": True}
+
+    ``node`` is the stable identifier a .louim template's "addons" section uses;
+    ``title`` is for display only and falls back to the node name.
+    """
+    provider = _config_provider(ctx)
+    access = _read_access(provider, ADDONS_NODE)
+
+    menus = []
+    for node in access.getElementNames():
+        if node == LOUIM_OWN_NODE:
+            continue
+        entry = access.getByName(node)
+        try:
+            context = entry.getByName("Context")
+        except Exception:  # noqa: BLE001
+            context = ""
+        try:
+            title = entry.getByName("Title")
+        except Exception:  # noqa: BLE001
+            title = ""
+        menus.append({
+            "node": node,
+            "title": title or node,
+            "visible": _shows_in_module(context or "", module),
+        })
+    return menus
+
+
 def addon_visibility(ctx, module=WRITER):
     """Snapshot whether each extension menu currently shows in ``module``.
 

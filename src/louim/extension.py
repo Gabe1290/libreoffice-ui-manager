@@ -268,9 +268,11 @@ def configure_menus(*args):
     visibility checkbox there, so an emptied menu still sits on the menu bar.
     Unticking a menu here removes it outright.
 
-    The dialog only offers whole menus; the finer per-item state is read from the
-    live menu bar and carried through unchanged, so configuring menus never
-    resurrects items a teacher removed by hand or with a template.
+    The dialog offers whole built-in menus plus each extension-contributed menu;
+    the finer per-item state is read from the live menu bar and carried through
+    unchanged, so configuring menus never resurrects items a teacher removed by
+    hand or with a template. Extension menus are hidden via their config
+    ``Context`` and only take effect for windows opened afterwards.
     """
     ctx = XSCRIPTCONTEXT.getComponentContext()
     try:
@@ -281,24 +283,32 @@ def configure_menus(*args):
             apply_menu_profile, menu_visibility, merge_top_level_choices,
             top_level_choices,
         )
+        from louim.adapters.writer.addons import (
+            all_addon_menus, apply_addon_profile,
+        )
         from louim.ui.menu_picker import show_menu_picker
 
         app_name = module.key.capitalize()
-        result = show_menu_picker(ctx, top_level_choices(ctx, module), t, app_name)
+        result = show_menu_picker(
+            ctx, top_level_choices(ctx, module), all_addon_menus(ctx, module),
+            t, app_name)
         if result is None:
             return  # user cancelled
-        chosen, also_save = result
+        chosen, chosen_addons, also_save = result
 
         profile = merge_top_level_choices(menu_visibility(ctx, module), chosen)
         hidden = apply_menu_profile(ctx, profile, module)
+        hidden_addons = apply_addon_profile(ctx, chosen_addons, module)
 
         saved = _save_current_layout(ctx, t, module) if also_save else None
         if saved:
             _message_box(ctx, t("product"),
-                         t("configure_saved_body", len(hidden), app_name, saved))
+                         t("configure_saved_body", len(hidden),
+                           len(hidden_addons), app_name, saved))
         else:
             _message_box(ctx, t("product"),
-                         t("configure_body", len(hidden), app_name))
+                         t("configure_body", len(hidden), len(hidden_addons),
+                           app_name))
     except Exception as exc:  # noqa: BLE001 — never let a macro crash silently
         _error_box(ctx, exc)
 

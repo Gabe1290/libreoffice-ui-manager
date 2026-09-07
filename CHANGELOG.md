@@ -3,6 +3,36 @@
 All notable changes to LibreOffice UI Manager (LOUIM) are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [4.4.0] — 2026-09-07
+
+### Added
+
+- **Configure Menus...** now lists **extension-contributed menus** (e.g.
+  Grammalecte, LireCouleur, Dmaths) under their own heading, each with a
+  tickbox, alongside the built-in menus. Unticking one hides it in the active
+  application through the same mechanism a template's `addons` section uses
+  (`addons.apply_addon_profile` — the addon's config `Context`), so extension
+  menus no longer need a hand-edited `.louim` file to remove. **Restore Full
+  Menus** already brings them back.
+- New adapter helper `addons.all_addon_menus` returns every extension menu with
+  its current visibility (shown *or* hidden), mirroring
+  `menubar.top_level_choices`, so a menu a previous template already hid still
+  appears in the dialog and can be re-ticked.
+
+### Changed
+
+- `menu_picker.show_menu_picker` takes an `addon_choices` list and returns a
+  third element, the `{node: bool}` map of extension-menu decisions;
+  `configure_menus` feeds it to `apply_addon_profile` after the built-in menus.
+- `configure_body` / `configure_saved_body` now report the extension-menu count
+  as well; new string `configure_addons_heading` labels the section and notes
+  that extension-menu changes take effect only for documents opened afterwards.
+
+### Notes
+
+- New/changed strings localized in English, French, German, and Italian.
+- 112 offline tests.
+
 ## [4.3.0] — 2026-08-30
 
 ### Added

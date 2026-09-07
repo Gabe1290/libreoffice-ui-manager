@@ -44,16 +44,22 @@ def _add(model, name, service, **props):
     return control
 
 
-def show_menu_picker(ctx, choices, t, app_name):
+def show_menu_picker(ctx, choices, addon_choices, t, app_name):
     """Show a checkbox per top-level menu; return the user's decisions.
 
-    ``choices`` is ``menubar.top_level_choices`` output — one dict per menu with
-    ``command``, ``label``, and current ``visible`` state. Returns a
-    ``(visibility, save_as_template)`` tuple, where ``visibility`` maps each menu's
-    UNO command ID to the ticked state, or ``None`` if the user cancelled.
+    ``choices`` is ``menubar.top_level_choices`` output — one dict per built-in
+    menu with ``command``, ``label``, and current ``visible`` state.
+    ``addon_choices`` is ``addons.all_addon_menus`` output — one dict per
+    extension-contributed menu with ``node``, ``title``, and ``visible``; pass
+    ``[]`` when no extension adds a menu and the section is omitted.
 
-    Unticking a menu here means "remove this menu entirely", which is exactly
-    what the caller then feeds to ``apply_menu_profile``.
+    Returns a ``(visibility, addon_visibility, save_as_template)`` tuple, or
+    ``None`` if the user cancelled. ``visibility`` maps each built-in menu's UNO
+    command ID to its ticked state; ``addon_visibility`` maps each extension
+    menu's config node to its ticked state. Unticking a built-in menu means
+    "remove this menu entirely" (fed to ``apply_menu_profile``); unticking an
+    extension menu means "hide it in this application" (fed to
+    ``apply_addon_profile``).
     """
     smgr = ctx.getServiceManager()
     model = smgr.createInstanceWithContext(
@@ -86,6 +92,30 @@ def show_menu_picker(ctx, choices, t, app_name):
         y += _ROW_HEIGHT
     y += _GAP
 
+    # Extension menus (Grammalecte, Dmaths, ...) are merged into the menu bar by
+    # their own extensions, so they are not in ``choices`` and are hidden by a
+    # different mechanism (addons.apply_addon_profile). List them under their own
+    # heading so one dialog covers the whole menu bar. The heading also carries
+    # the caveat that these only take effect for windows opened afterwards.
+    addon_names = []
+    if addon_choices:
+        _add(model, "addon_rule", "FixedLine", PositionX=_MARGIN, PositionY=y,
+             Width=inner, Height=1)
+        y += _GAP
+        _add(model, "addon_head", "FixedText", PositionX=_MARGIN, PositionY=y,
+             Width=inner, Height=_ROW_HEIGHT,
+             Label=t("configure_addons_heading"))
+        y += _ROW_HEIGHT
+        for index, choice in enumerate(addon_choices):
+            name = "addon%d" % index
+            _add(model, name, "CheckBox", PositionX=_MARGIN + 2, PositionY=y,
+                 Width=inner - 2, Height=_ROW_HEIGHT,
+                 Label=choice["title"] or choice["node"],
+                 State=1 if choice["visible"] else 0)
+            addon_names.append((name, choice["node"]))
+            y += _ROW_HEIGHT
+        y += _GAP
+
     _add(model, "save_tpl", "CheckBox", PositionX=_MARGIN + 2, PositionY=y,
          Width=inner - 2, Height=_ROW_HEIGHT, State=0,
          Label=t("configure_save_label"))
@@ -112,8 +142,12 @@ def show_menu_picker(ctx, choices, t, app_name):
             command: bool(dialog.getControl(name).getModel().State)
             for name, command in names
         }
+        addon_visibility = {
+            node: bool(dialog.getControl(name).getModel().State)
+            for name, node in addon_names
+        }
         save = bool(dialog.getControl("save_tpl").getModel().State)
-        return visibility, save
+        return visibility, addon_visibility, save
     finally:
         # Dispose whether we applied or cancelled: an undisposed dialog peer
         # leaks a window that can outlive the document frame.

@@ -45,6 +45,22 @@ class StringTableTest(unittest.TestCase):
             self.assertIn("layout.louim",
                           translator(lang)("export_body", "layout.louim"))
 
+    def test_configure_bodies_format_with_menu_and_extension_counts(self):
+        # Both carry two %d (built-in menus, extension menus) before the app
+        # name; the saved variant adds the file name. A dropped specifier would
+        # raise TypeError here.
+        for lang in SUPPORTED_LANGS:
+            t = translator(lang)
+            self.assertIn("Calc", t("configure_body", 3, 1, "Calc"))
+            out = t("configure_saved_body", 3, 1, "Calc", "prof.louim")
+            self.assertIn("Calc", out)
+            self.assertIn("prof.louim", out)
+
+    def test_configure_addons_heading_translated_everywhere(self):
+        seen = {translator(l)("configure_addons_heading")
+                for l in SUPPORTED_LANGS}
+        self.assertEqual(len(seen), len(SUPPORTED_LANGS))
+
     def test_restore_body_names_the_application(self):
         # Restore acts on the active application, so the message must carry
         # its name (it used to hardcode "Writer").
