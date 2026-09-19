@@ -94,6 +94,36 @@ exactly what they were before LOUIM touched them, independent of which
 template, if any, was last applied. It's always safe to click if something
 looks wrong.
 
+## Tip: taming a huge font list
+
+LOUIM is a menu, toolbar, and sidebar manager — it doesn't touch the font
+name list in the Format toolbar or sidebar. If that dropdown is showing
+hundreds or thousands of entries (a common symptom on Linux systems with the
+full `fonts-noto-*` package family installed, which alone can add over 2,000
+"Noto ..." variants for scripts a class will never use), that's LibreOffice
+faithfully listing every font the operating system reports to it, and it's
+worth fixing separately from anything LOUIM controls.
+
+LOUIM is multi-platform (the same `.louim` templates and menu commands work
+on Writer, Calc, Impress, and Draw across Windows, macOS, and Linux), but the
+installed font list is machine- and platform-dependent, not something a
+template can capture or restore. Two computers running the identical
+`.louim` file can still show completely different fonts, because fonts come
+from the OS, not from LOUIM's configuration. Trimming the list is done at
+the OS or font-manager level, once per machine, and is outside LOUIM's
+scope.
+
+On Linux, this can be done per user, without admin rights, using Fontconfig:
+create `~/.config/fontconfig/fonts.conf` with a `<selectfont><rejectfont>`
+rule that hides unwanted families (for example everything matching `Noto
+Sans *` or `Noto Serif *`) while explicitly keeping the general-purpose ones
+students actually need, such as Noto Sans, Noto Serif, Noto Sans Mono, and
+Noto Color Emoji. Run `fc-cache -f` and restart LibreOffice to pick up the
+change. Nothing is uninstalled, so it's easy to undo by moving the file
+aside. On Windows or macOS, the equivalent is hiding or uninstalling the
+unwanted font families through the OS's own font manager, since neither
+platform has a per-user Fontconfig-style filter.
+
 ## Common questions
 
 Will a template break if a student's LibreOffice is in a different language?

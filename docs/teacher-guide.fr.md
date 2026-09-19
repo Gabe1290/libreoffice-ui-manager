@@ -110,6 +110,41 @@ latérale et menus d'extension, exactement comme ils étaient avant que LOUIM
 n'y touche, indépendamment du modèle appliqué en dernier, le cas échéant.
 C'est toujours sûr de cliquer si quelque chose semble anormal.
 
+## Astuce : dompter une liste de polices trop longue
+
+LOUIM gère les menus, les barres d'outils et la barre latérale — il ne
+touche pas à la liste des noms de polices dans la barre d'outils Format ou
+dans la barre latérale. Si ce menu déroulant affiche des centaines, voire
+des milliers d'entrées (un symptôme courant sous Linux quand toute la
+famille de paquets `fonts-noto-*` est installée, qui à elle seule peut
+ajouter plus de 2 000 variantes « Noto ... » pour des écritures qu'une
+classe n'utilisera jamais), c'est simplement LibreOffice qui liste
+fidèlement chaque police que le système d'exploitation lui signale, et cela
+se corrige indépendamment de tout ce que LOUIM contrôle.
+
+LOUIM est multiplateforme (les mêmes modèles `.louim` et les mêmes commandes
+de menu fonctionnent sous Writer, Calc, Impress et Draw, sur Windows, macOS
+et Linux), mais la liste des polices installées dépend de la machine et de
+la plateforme, ce n'est pas quelque chose qu'un modèle peut capturer ou
+restaurer. Deux ordinateurs utilisant exactement le même fichier `.louim`
+peuvent afficher des polices complètement différentes, parce que les
+polices viennent du système d'exploitation, pas de la configuration de
+LOUIM. Réduire cette liste se fait au niveau du système ou du gestionnaire
+de polices, une fois par machine, et sort du périmètre de LOUIM.
+
+Sous Linux, cela peut se faire par utilisateur, sans droits administrateur,
+avec Fontconfig : créez `~/.config/fontconfig/fonts.conf` avec une règle
+`<selectfont><rejectfont>` qui masque les familles indésirables (par exemple
+tout ce qui correspond à `Noto Sans *` ou `Noto Serif *`) tout en gardant
+explicitement les polices généralistes dont les élèves ont réellement
+besoin, comme Noto Sans, Noto Serif, Noto Sans Mono et Noto Color Emoji.
+Exécutez `fc-cache -f` et redémarrez LibreOffice pour appliquer le
+changement. Rien n'est désinstallé, donc c'est facile à annuler en
+déplaçant le fichier ailleurs. Sous Windows ou macOS, l'équivalent consiste
+à masquer ou désinstaller les familles de polices indésirables via le
+gestionnaire de polices du système, aucune des deux plateformes n'ayant de
+filtre façon Fontconfig par utilisateur.
+
 ## Questions fréquentes
 
 Un modèle va-t-il casser si le LibreOffice d'un élève est dans une autre
